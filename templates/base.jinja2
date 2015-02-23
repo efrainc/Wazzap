@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Waszapp</title>
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <header>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <h1>Wazapp</h1>
+      <section id="content">
+      {% block body %}{% endblock %}
+        <h2>Map</h2>
+        {% for entry in entries %}
+          <article class="entry" id="entry={{entry.id}}">
+          <h3>{{ entry.title }}</h3>
+            <p class="dateline">{{ entry.created.strftime('%b. %d, %Y') }}
+            <div class="entry_body">
+            {{ entry.tweet|safe }}
+            </div>
+           </article>
+        {% else %}
+          <div class="entry">
+            <p><em>Map is Missing in Action</em></p>
+          </div>
+        {% endfor %}
+      </section>
+    </main>
+    <footer>
+      <p>Created in the Code Fellows Python Dev Accelerator</p>
+    </footer>
+  </body>
+</html>
