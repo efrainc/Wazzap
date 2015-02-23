@@ -2,6 +2,7 @@
 
 import os
 import logging
+import json
 import datetime
 import psycopg2
 from pyramid.config import Configurator
@@ -11,7 +12,7 @@ from pyramid.events import NewRequest, subscriber
 from waitress import serve
 from contextlib import closing
 
-
+here = os.path.dirname(os.path.abspath(__file__))
 
 DB_SCHEMA = """
 CREATE TABLE IF NOT EXISTS entries (
@@ -112,6 +113,7 @@ def main():
     )
     config.include('pyramid_jinja2')
     config.add_route('home', '/')
+    config.add_static_view('static', os.path.join(here, 'static'))
     config.scan()
     app = config.make_wsgi_app()
     return app
