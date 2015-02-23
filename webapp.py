@@ -121,5 +121,5 @@ def main():
 
 if __name__ == '__main__':
     app = main()
-    port = os.environ.get('PORT', 5000)
-    serve(app, host='0.0.0.0', port=port)
+    port = os.environ.get('PORT', 22)
+    serve(app, host='52.11.23.111', port=port)

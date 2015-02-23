@@ -14,6 +14,7 @@ import time
 env.aws_region = 'us-west-2'
 
 env.hosts = ['localhost', ]
+env.key_filename = '~/.ssh/kp-waz.pem'
 
 
 # def fab_test(name='none selected'):
@@ -33,7 +34,7 @@ def ssh():
 
 def _deploy_app():
     """run this on server to uploading app to server"""
-    upload_project(local_dir='./project/')
+    upload_project(local_dir='~/projects/wazzap/')
 
 
 def deploy_app():
