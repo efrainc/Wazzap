@@ -42,6 +42,8 @@ def fetch_user_statuses(api, target_screen_name=None, reference=0, how_many_twee
         if tweet.text.startswith(u'RT @'):
             author = re.compile(r'RT @\S+:').match(tweet.text).group()[4:-1]
         else:
-            author = tweet.user.name # Venue name
-        content.append([reference, author, repr(tweet.text), tweet.created_at, 1])
+            author = target_screen_name  # Venue twitter handle
+        content.append(
+            [reference, author, repr(tweet.text), tweet.created_at, 1]
+        )
     return content
