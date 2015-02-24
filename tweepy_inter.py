@@ -1,4 +1,6 @@
 import tweepy
+import threading
+import psycopg2
 
 
 def authorize():
@@ -17,12 +19,23 @@ def authorize():
     return tweepy.API(auth)
 
 
+def fetch_related_statuses(api, name, how_many_tweets=25):
+    """
+    Return a list of (user name, related tweet content).
+    """
+    pass
+
+
+def write_data(tweets_list):
+    pass
+
+
 def fetch_user_statuses(api, name=None, how_many_tweets=50):
     """
-    Return a list of timeline tweet content for a given user.
+    Return a list of (user name, timeline tweet content).
     """
     tweets = api.user_timeline(screen_name=name, count=how_many_tweets)
     content = []
     for tweet in tweets:
-        content.append(repr(tweet.content))
+        content.append(repr(tweet.user.name), repr(tweet.text))
     return content

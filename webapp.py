@@ -14,23 +14,71 @@ from contextlib import closing
 
 here = os.path.dirname(os.path.abspath(__file__))
 
-DB_SCHEMA = """
-CREATE TABLE IF NOT EXISTS entries (
+# DB_SCHEMA = """
+# CREATE TABLE IF NOT EXISTS entries (
+#     id serial PRIMARY KEY,
+#     title VARCHAR (127) NOT NULL,
+#     tweet TEXT NOT NULL,
+#     venue VARCHAR (127) NOT NULL,
+#     created TIMESTAMP NOT NULL
+# )
+# """
+
+DB_LOCALS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS locals (
     id serial PRIMARY KEY,
-    title VARCHAR (127) NOT NULL,
-    tweet TEXT NOT NULL,
-    venue VARCHAR (127) NOT NULL,
-    created TIMESTAMP NOT NULL
+
+    venue VARCHAR(127) NOT NULL,
+    screen_name VARCHAR(127) NOT NULL,
+    address TEXT NOT NULL,
+    lat NUMERIC NOT NULL,
+    long NUMERIC NOT NULL
 )
 """
 
-INSERT_ENTRY = """
-INSERT INTO entries (title, text, created) VALUES (%s, %s, %s)
+READ_LOCALS_ENTRY = """
+SELECT id, venue, screen_name, address, lat, long FROM locals
 """
 
-SELECT_ENTRIES = """
-SELECT id, title, tweet, created, venue FROM entries ORDER BY created DESC
+WRITE_LOCALS_ENTRY = """
+INSERT INTO locals (venue, screen_name, address, lat, long) VALUES(%s, %s, %s, %s, %s)
 """
+
+DB_TWEETS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS tweets (
+    id serial PRIMARY KEY,
+
+    parent_id INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE NO ACTION,
+    user_handle TEXT NOT NULL,
+    content TEXT NOT NULL,
+    time TIMESTAMP NOT NULL,
+    count INTEGER NOT NULL
+)
+"""
+
+# {table from} {id to associate with}
+READ_TWEET = """
+SELECT id, parent_id, user_handle, content, time FROM %s WHERE parent_id = %s
+"""
+
+# {table name} {data from one tweet}
+WRITE_TWEET = """
+INSERT INTO %s (parent_id, user_handle, content, time, count) VALUES(%s, %s, %s, %s, %s)
+"""
+
+# {table name} {content to match}
+UPDATE_TWEET = """
+UPDATE %s SET count = count + 1 WHERE content = %s
+"""
+
+
+# INSERT_ENTRY = """
+# INSERT INTO entries (title, text, created) VALUES (%s, %s, %s)
+# """
+
+# SELECT_ENTRIES = """
+# SELECT id, title, tweet, created, venue FROM entries ORDER BY created DESC
+# """
 
 
 logging.basicConfig()
@@ -75,7 +123,9 @@ def init_db():
         'DATABASE_URL', 'dbname=webapp_original user=efrain-petercamacho'
     )
     with closing(connect_db(settings)) as db:
-        db.cursor().execute(DB_SCHEMA)
+        # db.cursor().execute(DB_SCHEMA)
+        db.cursor().execute(DB_LOCALS_SCHEMA)
+        db.cursor().execute(DB_TWEETS_SCHEMA)
         db.commit()
 
 def write_entry(request):
