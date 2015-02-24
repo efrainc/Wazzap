@@ -76,8 +76,15 @@ def init_db():
     Warning: This function will not update existing table definitions
     """
     settings = {}
-    settings['db'] = os.environ.get(
-        'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
+    dbase_settings = [
+        'host=wazzapdbinstance.cskx7uviv9zs.us-west-2.rds.amazonaws.com',
+        'dbname=wazzapdbase',
+        'user=wazzapuser']
+    dbase_text = " ".join(dbase_settings)
+    print dbase_text
+    settings['db'] = os.environ.get(dbase_text)
+    # settings['db'] = os.environ.get(
+    #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
     with closing(connect_db(settings)) as db:
         db.cursor().execute(DB_SCHEMA)
         db.commit()
@@ -107,8 +114,16 @@ def main():
     settings = {}
     settings['reload_all'] = os.environ.get('DEBUG', True)
     settings['debug_all'] = os.environ.get('DEBUG', True)
-    settings['db'] = os.environ.get(
-        'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
+    # settings['db'] = os.environ.get(
+    #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
+    dbase_settings = [
+        'host=wazzapdbinstance.cskx7uviv9zs.us-west-2.rds.amazonaws.com',
+        'dbname=wazzapdbase',
+        'user=wazzapuser']
+    dbase_text = " ".join(dbase_settings)
+    print dbase_text
+    settings['db'] = os.environ.get(dbase_text)
+
     # secret value for session signing:
     secret = os.environ.get('JOURNAL_SESSION_SECRET', 'itsaseekrit')
     session_factory = SignedCookieSessionFactory(secret)
