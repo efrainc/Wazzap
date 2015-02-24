@@ -13,6 +13,9 @@ from waitress import serve
 from contextlib import closing
 from geopy.geocoders import Nominatim
 
+from tweepy_inter import authorize
+from tweepy_inter import fetch_user_statuses
+
 here = os.path.dirname(os.path.abspath(__file__))
 
 # DB_SCHEMA = """
@@ -40,22 +43,26 @@ CREATE TABLE IF NOT EXISTS locals (
 """
 
 READ_LOCALS_ENTRY = """
-SELECT id, venue, screen_name, address, lat, long FROM locals
+SELECT "id", "venue", "screen_name", "address", "lat", "long" FROM "locals"
 """
 
 WRITE_LOCALS_ENTRY = """
-INSERT INTO locals (venue, screen_name, address, lat, long) VALUES(%s, %s, %s, %s, %s)
+INSERT INTO "locals" ("venue", "screen_name", "address", "lat", "long") VALUES(%s, %s, %s, %s, %s)
+"""
+
+FETCH_LOCALS_ID = """
+SELECT "id" FROM "locals" WHERE screen_name = %s
 """
 
 DB_TWEETS_SCHEMA = """
-CREATE TABLE IF NOT EXISTS tweets (
-    id serial PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS "tweets" (
+    "id" serial PRIMARY KEY,
 
-    parent_id INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE NO ACTION,
-    author_handle TEXT NOT NULL,
-    content TEXT NOT NULL,
-    time TIMESTAMP NOT NULL,
-    count INTEGER NOT NULL
+    "parent_id" INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE NO ACTION,
+    "author_handle" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "time" TIMESTAMP NOT NULL,
+    "count" INTEGER NOT NULL
 )
 """
 
@@ -139,9 +146,6 @@ def setup_data_snapshot():
     """
     Set up database for interaction.
     """
-    from tweepy_inter import authorize
-    from tweepy_inter import fetch_user_statuses
-
     settings = {}
     settings['db'] = os.environ.get(
         'DATABASE_URL', LOCAL_CREDENTIALS)
@@ -151,25 +155,32 @@ def setup_data_snapshot():
         # venue, screen_name, address, lat, long
         # json.loads(response.content, response.encoding)['results'][0]['geometry']['location']['lat']
         keyarena = ('Key Arena', 'KeyArenaSeattle', '305 Harrison Street, Seattle, WA 98109', 47.6219664, -122.3545531)
-        neumos = ('Neumos', 'Neumos', '925 East Pike Street, Seattle, WA 98122', 47.6219664, -122.3545531)
+        neumos = ('Neumos', 'Neumos', '925 East Pike Street, Seattle, WA 98122', 47.613843, -122.319716)
         # moore = ('The Moore Theatre', '', '1932 2nd Ave, Seattle, WA 98101', 47.6117865, -122.3413842)
         paramount = ('Paramount Theatre', 'BroadwaySeattle', '911 Pine Street, Seattle, WA 98101', 47.61347929999999, -122.3317273)
-        cursor.execute(WRITE_LOCALS_ENTRY, keyarena)
-        cursor.execute(WRITE_LOCALS_ENTRY, neumos)
-        cursor.execute(WRITE_LOCALS_ENTRY, paramount)
-        db.commit()
+        for info in [keyarena, neumos, paramount]:
+            write_local(info, db)
 
         # Write tweets to tweets table
         # parent_id, author_handle, content, time, count
-        # TODO: find a good way to get id of a venue in the locals table
-        api = authorize()
-        results = fetch_user_statuses(api, 'KeyArenaSeattle', reference=1)
-        cursor.executemany(WRITE_TWEET, results)
-        results = fetch_user_statuses(api, 'Neumos', reference=2)
-        cursor.executemany(WRITE_TWEET, results)
-        results = fetch_user_statuses(api, 'BroadwaySeattle', reference=3)
-        cursor.executemany(WRITE_TWEET, results)
-        db.commit()
+        for handle in ['KeyArenaSeattle', 'Neumos', 'BroadwaySeattle']:
+            pull_tweets(handle, db)
+
+
+def write_local(local_info_tuple, connection):
+    cursor = connection.cursor()
+    cursor.execute(WRITE_LOCALS_ENTRY, local_info_tuple)
+    connection.commit()
+
+
+def pull_tweets(target_twitter_handle, connection):
+    cursor = connection.cursor()
+    cursor.execute(FETCH_LOCALS_ID, (target_twitter_handle,))
+    refer = cursor.fetchone()[0]
+    results = fetch_user_statuses(authorize(), target_twitter_handle, reference=refer)
+    cursor.executemany(WRITE_TWEET, results)
+    connection.commit()
+
 
 
 def write_entry(request):
