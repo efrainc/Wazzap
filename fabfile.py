@@ -14,6 +14,8 @@ import time
 env.aws_region = 'us-west-2'
 
 env.hosts = ['localhost', ]
+env.key_filename = '~/.ssh/pk-waz.pem'
+env.myhost = 'ec2-52-10-224-242.us-west-2.compute.amazonaws.com'
 
 
 # def fab_test(name='none selected'):
@@ -22,9 +24,12 @@ env.hosts = ['localhost', ]
 #     print (text)
 
 
-def ssh():
+def ssh(host_=None):
     """run an open shell"""
-    run_command_on_selected_server(open_shell)
+    run_command_on_selected_server(open_shell, host_=host_)
+
+def ssh_wazzap():
+    ssh(host_=env.myhost)
 
 
 # def host_type():
@@ -33,13 +38,15 @@ def ssh():
 
 def _deploy_app():
     """run this on server to uploading app to server"""
-    upload_project(local_dir='./project/')
+    upload_project(local_dir='~/projects/wazzap/')
 
 
-def deploy_app():
+def deploy_app(host_=None):
     """choose a in instance and upload app to server """
-    run_command_on_selected_server(_deploy_app)
+    run_command_on_selected_server(_deploy_app, host_=host_)
 
+def deploy_wazzap():
+    deploy_app(host_=env.myhost)
 
 def get_ec2_connection():
     """get an ec2 connection"""
@@ -90,6 +97,7 @@ def terminate_instance():
 def select_instance(state='running'):
     """give an interactive choice of running instances"""
     if env.get('active_instance', False):
+        print "No active instances"
         return
 
     list_aws_instances(state=state)
@@ -114,12 +122,18 @@ def select_instance(state='running'):
     print env.active_instance
 
 
-def run_command_on_selected_server(command):
+def run_command_on_selected_server(command, host_=None):
     """run a given command (passed by name as an argument) on the server we select"""
-    select_instance()
-    selected_hosts = [
-        'ubuntu@' + env.active_instance.public_dns_name
-    ]
+    print host_
+    if not host_:
+        select_instance()
+        selected_hosts = [
+            'ubuntu@' + env.active_instance.public_dns_name
+        ]
+    else:
+        selected_hosts = [
+            'ubuntu@' + str(env.myhost)
+        ]
     execute(command, hosts=selected_hosts)
 
 
@@ -129,8 +143,11 @@ def _install_nginx():
     sudo('/etc/init.d/nginx start')
 
 
-def install_nginx():
-    run_command_on_selected_server(_install_nginx)
+def install_nginx(host_=None):
+    run_command_on_selected_server(_install_nginx, host_=host_)
+
+def install_nginx_wazzap():
+    install_nginx(host_=env.myhost)
 
 
 def provision_instance(wait_for_running=False, timeout=60, interval=2):
@@ -139,7 +156,7 @@ def provision_instance(wait_for_running=False, timeout=60, interval=2):
     timeout_val = int(timeout)
     conn = get_ec2_connection()
     instance_type = 't1.micro'
-    key_name = 'kp-waz'
+    key_name = 'pk-waz'
     security_group = 'wazzap_access'
     image_id = 'ami-d0d8b8e0'
 

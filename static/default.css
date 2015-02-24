@@ -1,0 +1,28 @@
+#content {width: 100%; height: 100%}
+header {
+    background-color: orange;
+    padding: 2em 1em 2em 1em;
+    font-family: 'Bangers', cursive;
+    position: absolute;
+    top: 1em;
+    right: 1em;
+    z-index: 1;
+    color: white;
+    border-radius: 20px;}
+h1, ul {margin: 0; font-size: 5em;}
+
+#sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 100%;
+  background-color: red;
+  transform: translate(200px, 0px);
+  transition: all 1s ease-out;
+}
+
+
+.sidebar--active {
+  transform: translate(0px, 0px) !important;
+}
