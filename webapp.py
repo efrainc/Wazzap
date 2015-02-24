@@ -77,12 +77,12 @@ def init_db():
     """
     settings = {}
     dbase_settings = [
-        'host=wazzapdbinstance.cskx7uviv9zs.us-west-2.rds.amazonaws.com',
         'dbname=wazzapdbase',
         'user=wazzapuser']
     dbase_text = " ".join(dbase_settings)
     print dbase_text
-    settings['db'] = os.environ.get(dbase_text)
+    settings['db'] = os.environ.get(
+        'DATABASE_URL', 'DB_PASSWORD', dbase_text)
     # settings['db'] = os.environ.get(
     #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
     with closing(connect_db(settings)) as db:
@@ -117,12 +117,12 @@ def main():
     # settings['db'] = os.environ.get(
     #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
     dbase_settings = [
-        'host=wazzapdbinstance.cskx7uviv9zs.us-west-2.rds.amazonaws.com',
         'dbname=wazzapdbase',
         'user=wazzapuser']
     dbase_text = " ".join(dbase_settings)
     print dbase_text
-    settings['db'] = os.environ.get(dbase_text)
+    settings['db'] = os.environ.get(
+        'DATABASE_URL', 'DB_PASSWORD', dbase_text)
 
     # secret value for session signing:
     secret = os.environ.get('JOURNAL_SESSION_SECRET', 'itsaseekrit')
