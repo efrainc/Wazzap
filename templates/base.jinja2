@@ -20,30 +20,10 @@
   <body>
     <header>
       <h1>Wazapp</h1>
-     <!--  <nav>
-        <ul>
-          <li><a href="/">Home</a></li>
-        </ul>
-      </nav> -->
     </header>
     <section id="content">
-     <!--  {% block body %}{% endblock %} -->
         <div id="map-canvas"></div>
-       <!--  {% for entry in entries %}
-          <article class="entry" id="entry={{entry.id}}">
-          <h3>{{ entry.title }}</h3>
-            <p class="dateline">{{ entry.created.strftime('%b. %d, %Y') }}
-            <div class="entry_body">
-            {{ entry.tweet|safe }}
-            </div>
-           </article>
-           {% else %}
-          <div class="entry">
-            <p><em>Map is Missing in Action</em></p>
-          </div>
-         {% endfor %} -->
-         <div id="sidebar">
-         </div>
+         <div id="sidebar"></div>
     </section>
     <footer>
         <script type="text/javascript">
@@ -60,8 +40,7 @@
         map.data.addListener('click', function(event) {
           console.log(event.feature)
           var address = event.feature["k"]["address"].slice(0, -5);
-          // var lng = event.feature["k"]["lng"];
-
+      
           // TODO: add tweets to sidebar 
           $.ajax({
               url: '/gettweets',
@@ -69,7 +48,13 @@
               dataType: 'json',
               data: {'address': address},
               success: function(result){
-                console.log(result);
+                var tweets = result.tweets
+                for(var tweet in tweets){
+                  console.log(tweets[tweet].content)
+                }
+                // for (var tweet in tweets){
+                //   console.log(tweet.content);
+                // }
               },
           });
 
@@ -78,9 +63,6 @@
       }
       // Load geojson data
       google.maps.event.addDomListener(window, 'load', initialize);
-      // map.data.addListener('click', function(event) {
-      //   document.getElementById('sidebar').toggleClass(".sidebar--active");
-        // event.feature
     </script>
     </footer>
   </body>
