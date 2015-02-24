@@ -16,9 +16,14 @@ env.aws_region = 'us-west-2'
 env.hosts = ['localhost', ]
 env.key_filename = '~/.ssh/pk-waz.pem'
 env.myhost = 'ec2-52-10-224-242.us-west-2.compute.amazonaws.com'
-env.remote_directory = '~/wazzap/'
+
+
+env.remote_directory = '~/wazzap'
 
 # change this line to the local location of your wazzap project:
+# Make sure to end the location with a / or else it will drop the
+# contents in as a child.
+
 env.local_directory = '~/projects/wazzap/'
 
 
@@ -32,6 +37,7 @@ def ssh(host_=None):
     """run an open shell"""
     run_command_on_selected_server(open_shell, host_=host_)
 
+
 def ssh_wazzap():
     ssh(host_=env.myhost)
 
@@ -40,9 +46,10 @@ def ssh_wazzap():
 #     run('uname -s')
 
 
+
 def _deploy_app():
     """run this on server to uploading app to server"""
-    upload_project(local_dir=env.local_directory, remote_dir=env.remote_directory)
+    rsync_project(env.remote_directory, env.local_directory,)
 
 
 def deploy_app(host_=None):
