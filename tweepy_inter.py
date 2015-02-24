@@ -28,20 +28,23 @@ def fetch_related_statuses(api, name, how_many_tweets=25):
 
 
 def write_data(tweets_list):
-    pass
+    with open('tweets.txt') as f:
+        f.write(tweets_list)
 
 
-def fetch_user_statuses(api, target_screen_name=None, reference=0, how_many_tweets=50):
+def fetch_user_statuses(api, target_twitter_handle=None, reference=0, how_many_tweets=50):
     """
     Return a list of (user name, content, tweet time(gmt)).
     """
-    tweets = api.user_timeline(screen_name=target_screen_name, count=how_many_tweets)
+    tweets = api.user_timeline(screen_name=target_twitter_handle, count=how_many_tweets)
     content = []
     for tweet in tweets:
         # If retweeted, a tweet begins with 'RT @name:'
         if tweet.text.startswith(u'RT @'):
             author = re.compile(r'RT @\S+:').match(tweet.text).group()[4:-1]
         else:
-            author = tweet.user.name # Venue name
-        content.append([reference, author, repr(tweet.text), tweet.created_at, 1])
+            author = target_twitter_handle  # Venue twitter handle
+        content.append(
+            [reference, author, tweet.text.encode('utf-8'), tweet.created_at, 1]
+        )
     return content
