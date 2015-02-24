@@ -184,8 +184,9 @@ def write_entry(request):
 def geo_json(request):
     """return a list of all entries as dicts"""
     cursor = request.db.cursor()
-    cursor.execute(SELECT_ENTRIES)
-    keys = ('id', 'title', 'tweet', 'created', 'venue')
+    cursor.execute(READ_TWEET, (1,))  # TODO: retrieving table id for a venue
+
+    keys = ('id', 'parent_id', 'author_handle', 'content', 'time')
     entries = [dict(zip(keys, row)) for row in cursor.fetchall()]
     return {'entries': entries}
 
