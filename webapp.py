@@ -11,6 +11,7 @@ from pyramid.view import view_config
 from pyramid.events import NewRequest, subscriber
 from waitress import serve
 from contextlib import closing
+from geopy.geocoders import Nominatim
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -36,6 +37,7 @@ SELECT id, title, tweet, created, venue FROM entries ORDER BY created DESC
 logging.basicConfig()
 log = logging.getLogger(__file__)
 
+
 @subscriber(NewRequest)
 def open_connection(event):
     request = event.request
@@ -47,9 +49,11 @@ def open_connection(event):
 # def home(request):
 #     return "Wazzapp v1.0"
 
+
 def connect_db(settings):
     """Return a connection to the configured database"""
     return psycopg2.connect(settings['db'])
+
 
 def close_connection(request):
     """close the database connection for this request
@@ -65,6 +69,7 @@ def close_connection(request):
             db.commit()
         request.db.close()
 
+
 def init_db():
     """Create database tables defined by DB_SCHEMA
 
@@ -72,11 +77,11 @@ def init_db():
     """
     settings = {}
     settings['db'] = os.environ.get(
-        'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu'
-    )
+        'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
     with closing(connect_db(settings)) as db:
         db.cursor().execute(DB_SCHEMA)
         db.commit()
+
 
 def write_entry(request):
     """write a single entry to the database"""
@@ -87,13 +92,15 @@ def write_entry(request):
 
 
 @view_config(route_name='home', renderer='templates/base.jinja2')
-def read_entries(request):
+def geo_json(request):
     """return a list of all entries as dicts"""
+   
     cursor = request.db.cursor()
     cursor.execute(SELECT_ENTRIES)
     keys = ('id', 'title', 'tweet', 'created', 'venue')
     entries = [dict(zip(keys, row)) for row in cursor.fetchall()]
     return {'entries': entries}
+
 
 def main():
     """Create a configured wsgi app"""
@@ -101,8 +108,7 @@ def main():
     settings['reload_all'] = os.environ.get('DEBUG', True)
     settings['debug_all'] = os.environ.get('DEBUG', True)
     settings['db'] = os.environ.get(
-    'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu'
-    )
+        'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
     # secret value for session signing:
     secret = os.environ.get('JOURNAL_SESSION_SECRET', 'itsaseekrit')
     session_factory = SignedCookieSessionFactory(secret)
