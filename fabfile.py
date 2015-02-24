@@ -16,6 +16,10 @@ env.aws_region = 'us-west-2'
 env.hosts = ['localhost', ]
 env.key_filename = '~/.ssh/pk-waz.pem'
 env.myhost = 'ec2-52-10-224-242.us-west-2.compute.amazonaws.com'
+env.remote_directory = '~/wazzap/'
+
+# change this line to the local location of your wazzap project:
+env.local_directory = '~/projects/wazzap/'
 
 
 # def fab_test(name='none selected'):
@@ -38,15 +42,21 @@ def ssh_wazzap():
 
 def _deploy_app():
     """run this on server to uploading app to server"""
-    upload_project(local_dir='~/projects/wazzap/')
+    upload_project(local_dir=env.local_directory, remote_dir=env.remote_directory)
 
 
 def deploy_app(host_=None):
     """choose a in instance and upload app to server """
     run_command_on_selected_server(_deploy_app, host_=host_)
 
-def deploy_wazzap():
+
+def deploy_wazzap(l_dir=env.local_directory):
+    """Deploys wazzap to our remote location
+    Can set local location by using l_dir='<local path>'
+    """
+    env.local_directory = l_dir
     deploy_app(host_=env.myhost)
+
 
 def get_ec2_connection():
     """get an ec2 connection"""
