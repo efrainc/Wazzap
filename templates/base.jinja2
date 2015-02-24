@@ -59,18 +59,20 @@
 
         map.data.addListener('click', function(event) {
           console.log(event.feature)
-          var lat = event.feature["k"]["lat"];
-          var lng = event.feature["k"]["lng"];
+          var address = event.feature["k"]["address"].slice(0, -5);
+          // var lng = event.feature["k"]["lng"];
 
-          //TODO: add tweets to sidebar 
-          // $.ajax({
-          //     url: '/getTweets',
-          //     type: 'GET',
-          //     dataType: 'json',
-          //     data: {'lat': lat, 'lng': lng},
-          //     success: function(result){
-          //     };
-          //});
+          // TODO: add tweets to sidebar 
+          $.ajax({
+              url: '/gettweets',
+              type: 'GET',
+              dataType: 'json',
+              data: {'address': address},
+              success: function(result){
+                console.log(result);
+              },
+          });
+
           $('#sidebar').toggleClass("sidebar--active");
         });
       }

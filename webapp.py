@@ -25,7 +25,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-LOCAL_CREDENTIALS = 'dbname=postgres user=postgres password=admin'
+LOCAL_CREDENTIALS = 'dbname=webapp_original user=henryhowes password=admin'
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
@@ -59,8 +59,12 @@ CREATE TABLE IF NOT EXISTS tweets (
 )
 """
 
+GET_VENUE_ID = """
+SELECT id FROM locals WHERE address = %s
+"""
+
 # {table from} {id to associate with}
-READ_TWEET = """
+READ_TWEETS = """
 SELECT id, parent_id, author_handle, content, time FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
@@ -79,9 +83,9 @@ UPDATE tweets SET count = count + 1 WHERE content = %s
 # INSERT INTO entries (title, text, created) VALUES (%s, %s, %s)
 # """
 
-# SELECT_ENTRIES = """
-# SELECT id, title, tweet, created, venue FROM entries ORDER BY created DESC
-# """
+SELECT_ENTRIES = """
+SELECT id, title, tweet, created, venue FROM entries ORDER BY created DESC
+"""
 
 
 logging.basicConfig()
@@ -172,12 +176,12 @@ def setup_data_snapshot():
         db.commit()
 
 
-def write_entry(request):
-    """write a single entry to the database"""
-    title = request.params.get('title', None)
-    text = request.params.get('tweet', None)
-    created = datetime.datetime.utcnow()
-    request.db.cursor().execute(INSERT_ENTRY, [title, text, created])
+# def write_entry(request):
+#     """write a single entry to the database"""
+#     title = request.params.get('title', None)
+#     text = request.params.get('tweet', None)
+#     created = datetime.datetime.utcnow()
+#     request.db.cursor().execute(INSERT_ENTRY, [title, text, created])
 
 
 @view_config(route_name='home', renderer='templates/base.jinja2')
@@ -188,6 +192,20 @@ def geo_json(request):
     keys = ('id', 'title', 'tweet', 'created', 'venue')
     entries = [dict(zip(keys, row)) for row in cursor.fetchall()]
     return {'entries': entries}
+
+
+@view_config(route_name='gettweets', renderer='json')
+def get_tweets_from_db(request):
+    cursor = request.db.cursor()
+    cursor.execute(GET_VENUE_ID, (request.params.get('address', None), ))
+    # import pdb; pdb.set_trace();
+    venue_id = cursor.fetchone()
+    cursor.execute(READ_TWEETS, venue_id)
+    keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count')
+    tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
+    for tweet in tweets:
+        tweet['time'] = tweet['time'].strftime('%b %d, %Y')
+    return {'tweets': tweets}
 
 
 def main():
@@ -207,6 +225,7 @@ def main():
     )
     config.include('pyramid_jinja2')
     config.add_route('home', '/')
+    config.add_route('gettweets', '/gettweets')
     config.add_static_view('static', os.path.join(here, 'static'))
     config.scan()
     app = config.make_wsgi_app()
