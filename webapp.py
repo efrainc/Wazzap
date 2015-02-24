@@ -25,7 +25,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-LOCAL_CREDENTIALS = 'dbname=postgres user=postgres password=admin'
+LOCAL_CREDENTIALS = 'dbname=postgres user=ubuntu password='
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (

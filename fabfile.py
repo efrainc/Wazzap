@@ -38,7 +38,7 @@ def ssh_wazzap():
 
 def _deploy_app():
     """run this on server to uploading app to server"""
-    upload_project(local_dir='~/projects/wazzap/')
+    upload_project(local_dir='~/projects/wazzap/wazzap')
 
 
 def deploy_app(host_=None):
@@ -148,6 +148,26 @@ def install_nginx(host_=None):
 
 def install_nginx_wazzap():
     install_nginx(host_=env.myhost)
+
+# def _superviord():
+    # Only use as needed - should be creating a new instance
+    # echo_supervisord_conf > supervisord.conf <-- Creats simple
+    # .conf file needs to be updated to include webapp.
+    # run locally before pushing.
+    # upload_project(local_dir='~/projects/wazzap/')
+    # sudo('apt-get install supervisor')
+    # run('supervisord')
+
+# def supervisord():
+#     run_command_on_selected_server(_supervisord)
+
+# ##############################
+# Kill Supervisord
+#  In serverice instance run -> ps -e
+#  find the instnace id of supervisord
+#  use "sudo kill id"
+#  restart instance as needed
+# #################################
 
 
 def provision_instance(wait_for_running=False, timeout=60, interval=2):
