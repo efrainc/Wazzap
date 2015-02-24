@@ -5,6 +5,7 @@ import logging
 import json
 import datetime
 import psycopg2
+import secrets
 from pyramid.config import Configurator
 from pyramid.session import SignedCookieSessionFactory
 from pyramid.view import view_config
@@ -76,13 +77,7 @@ def init_db():
     Warning: This function will not update existing table definitions
     """
     settings = {}
-    dbase_settings = [
-        'dbname=wazzapdbase',
-        'user=wazzapuser']
-    dbase_text = " ".join(dbase_settings)
-    print dbase_text
-    settings['db'] = os.environ.get(
-        'DATABASE_URL', 'DB_PASSWORD', dbase_text)
+    settings['db'] = secrets.dbase_connection()
     # settings['db'] = os.environ.get(
     #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
     with closing(connect_db(settings)) as db:
@@ -116,14 +111,7 @@ def main():
     settings['debug_all'] = os.environ.get('DEBUG', True)
     # settings['db'] = os.environ.get(
     #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
-    dbase_settings = [
-        'dbname=wazzapdbase',
-        'user=wazzapuser']
-    dbase_text = " ".join(dbase_settings)
-    print dbase_text
-    settings['db'] = os.environ.get(
-        'DATABASE_URL', 'DB_PASSWORD', dbase_text)
-
+    settings['db'] = secrets.dbase_connection()
     # secret value for session signing:
     secret = os.environ.get('JOURNAL_SESSION_SECRET', 'itsaseekrit')
     session_factory = SignedCookieSessionFactory(secret)
