@@ -14,8 +14,8 @@ import time
 env.aws_region = 'us-west-2'
 
 env.hosts = ['localhost', ]
-env.key_filename = '~/.ssh/kp-waz.pem'
-env.myhost = 'ec2-52-11-23-111.us-west-2.compute.amazonaws.com'
+env.key_filename = '~/.ssh/pk-waz.pem'
+env.myhost = 'ec2-52-10-224-242.us-west-2.compute.amazonaws.com'
 
 
 # def fab_test(name='none selected'):
@@ -147,7 +147,7 @@ def install_nginx(host_=None):
     run_command_on_selected_server(_install_nginx, host_=host_)
 
 def install_nginx_wazzap():
-    ssh(host_=env.myhost)
+    install_nginx(host_=env.myhost)
 
 
 def provision_instance(wait_for_running=False, timeout=60, interval=2):
@@ -156,7 +156,7 @@ def provision_instance(wait_for_running=False, timeout=60, interval=2):
     timeout_val = int(timeout)
     conn = get_ec2_connection()
     instance_type = 't1.micro'
-    key_name = 'kp-waz'
+    key_name = 'pk-waz'
     security_group = 'wazzap_access'
     image_id = 'ami-d0d8b8e0'
 
