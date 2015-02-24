@@ -13,16 +13,27 @@ h1, ul {margin: 0; font-size: 5em;}
 
 #sidebar {
   position: absolute;
-  top: 0;
+  top: 12em;
   right: 0;
-  width: 200px;
+  width: 16em;
   height: 100%;
-  background-color: red;
-  transform: translate(200px, 0px);
+  max-height: 100vh;
+  overflow: scroll;
+  background-color: white;
+  opacity: 0.9;
+  transform: translate(16em, 0px);
   transition: all 1s ease-out;
+  border-radius: 20px;
 }
 
 
 .sidebar--active {
   transform: translate(0px, 0px) !important;
 }
+
+.tweet {
+  padding: 10px;
+  border-bottom: 1px solid #e1e8ed;
+}
+
+.gmnoprint {display: none;}

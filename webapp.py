@@ -198,13 +198,14 @@ def geo_json(request):
 def get_tweets_from_db(request):
     cursor = request.db.cursor()
     cursor.execute(GET_VENUE_ID, (request.params.get('address', None), ))
-    # import pdb; pdb.set_trace();
     venue_id = cursor.fetchone()
     cursor.execute(READ_TWEETS, venue_id)
     keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count')
     tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
     for tweet in tweets:
-        tweet['time'] = tweet['time'].strftime('%b %d, %Y')
+        time_since = (datetime.datetime.now() - tweet['time']).seconds / 3600
+        tweet['content'] = tweet['content'].encode('utf-8')
+        tweet['time'] = "{} hours ago".format(time_since)
     return {'tweets': tweets}
 
 

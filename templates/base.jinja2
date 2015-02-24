@@ -16,6 +16,7 @@
       src="https://maps.googleapis.com/maps/api/js">
     </script>
     <script src="static/jquery-2.1.3.min.js"></script>
+    <script src="/static/mustache.min.js"></script>
   </head>
   <body>
     <header>
@@ -23,7 +24,7 @@
     </header>
     <section id="content">
         <div id="map-canvas"></div>
-         <div id="sidebar"></div>
+        <div id="sidebar"></div>
     </section>
     <footer>
         <script type="text/javascript">
@@ -38,7 +39,7 @@
         map.data.loadGeoJson("/static/venue.json");
 
         map.data.addListener('click', function(event) {
-          console.log(event.feature)
+          // console.log(event.feature)
           var address = event.feature["k"]["address"].slice(0, -5);
       
           // TODO: add tweets to sidebar 
@@ -48,9 +49,17 @@
               dataType: 'json',
               data: {'address': address},
               success: function(result){
-                var tweets = result.tweets
+                $('#sidebar').html("");
+                var template = '<div class="tweet">'+
+                                  '<span class="user">[[author_handle]]</span>'+
+                                  '<span class="time">[[time]]</span>'+
+                                  '<p class="content">[[content]]';
+
+
+                var tweets = result.tweets;
                 for(var tweet in tweets){
-                  console.log(tweets[tweet].content)
+                  var html = Mustache.to_html(template, tweets[tweet]);
+                  $('#sidebar').append(html);
                 }
                 // for (var tweet in tweets){
                 //   console.log(tweet.content);
@@ -58,7 +67,7 @@
               },
           });
 
-          $('#sidebar').toggleClass("sidebar--active");
+          $('#sidebar').addClass("sidebar--active");
         });
       }
       // Load geojson data
