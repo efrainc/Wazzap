@@ -15,24 +15,7 @@
     <script type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js">
     </script>
-    <script type="text/javascript">
-      var geocoder = new google.maps.Geocoder();
-      var test = "511 Boren Ave N Seattle WA"
-    </script>
-    <script type="text/javascript">
-      var map;
-      function initialize() {
-        var mapOptions = {
-          center: { lat: 47.645101, lng: 237.658112},
-          zoom: 13
-      };
-        map = new google.maps.Map(document.getElementById('map-canvas'),
-          mapOptions);
-        map.data.loadGeoJson("static/my_map.json");
-      }
-      // Load geojson data
-      google.maps.event.addDomListener(window, 'load', initialize);
-    </script>
+    <script src="static/jquery-1.11.2.js"></script>
   </head>
   <body>
     <header>
@@ -45,7 +28,7 @@
     </header>
     <section id="content">
      <!--  {% block body %}{% endblock %} -->
-        <div id="map-canvas">Show Me</div>
+        <div id="map-canvas"></div>
        <!--  {% for entry in entries %}
           <article class="entry" id="entry={{entry.id}}">
           <h3>{{ entry.title }}</h3>
@@ -59,8 +42,44 @@
             <p><em>Map is Missing in Action</em></p>
           </div>
          {% endfor %} -->
+         <div id="sidebar">
+         </div>
     </section>
     <footer>
+        <script type="text/javascript">
+      var map;
+      function initialize() {
+        var mapOptions = {
+          center: { lat: 47.645101, lng: 237.658112},
+          zoom: 13
+      };
+        map = new google.maps.Map(document.getElementById('map-canvas'),
+          mapOptions);
+        map.data.loadGeoJson("/static/venue.json");
+
+        map.data.addListener('click', function(event) {
+          console.log(event.feature)
+          var lat = event.feature["k"]["lat"];
+          var lng = event.feature["k"]["lng"];
+
+          //TODO: add tweets to sidebar 
+          // $.ajax({
+          //     url: '/getTweets',
+          //     type: 'GET',
+          //     dataType: 'json',
+          //     data: {'lat': lat, 'lng': lng},
+          //     success: function(result){
+          //     };
+          //});
+          $('#sidebar').toggleClass("sidebar--active");
+        });
+      }
+      // Load geojson data
+      google.maps.event.addDomListener(window, 'load', initialize);
+      // map.data.addListener('click', function(event) {
+      //   document.getElementById('sidebar').toggleClass(".sidebar--active");
+        // event.feature
+    </script>
     </footer>
   </body>
 </html>
