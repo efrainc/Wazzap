@@ -25,6 +25,8 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
+LOCAL_CREDENTIALS = 'dbname=postgres user=postgres password=admin'
+
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
     id serial PRIMARY KEY,
@@ -50,7 +52,7 @@ CREATE TABLE IF NOT EXISTS tweets (
     id serial PRIMARY KEY,
 
     parent_id INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE NO ACTION,
-    user_handle TEXT NOT NULL,
+    author_handle TEXT NOT NULL,
     content TEXT NOT NULL,
     time TIMESTAMP NOT NULL,
     count INTEGER NOT NULL
@@ -59,17 +61,17 @@ CREATE TABLE IF NOT EXISTS tweets (
 
 # {table from} {id to associate with}
 READ_TWEET = """
-SELECT id, parent_id, user_handle, content, time FROM %s WHERE parent_id = %s
+SELECT id, parent_id, author_handle, content, time FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
 # {table name} {data from one tweet}
 WRITE_TWEET = """
-INSERT INTO %s (parent_id, user_handle, content, time, count) VALUES(%s, %s, %s, %s, %s)
+INSERT INTO tweets (parent_id, author_handle, content, time, count) VALUES(%s, %s, %s, %s, %s)
 """
 
 # {table name} {content to match}
 UPDATE_TWEET = """
-UPDATE %s SET count = count + 1 WHERE content = %s
+UPDATE tweets SET count = count + 1 WHERE content = %s
 """
 
 
@@ -125,11 +127,48 @@ def init_db():
     """
     settings = {}
     settings['db'] = os.environ.get(
-        'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
+        'DATABASE_URL', LOCAL_CREDENTIALS)
     with closing(connect_db(settings)) as db:
         # db.cursor().execute(DB_SCHEMA)
         db.cursor().execute(DB_LOCALS_SCHEMA)
         db.cursor().execute(DB_TWEETS_SCHEMA)
+        db.commit()
+
+
+def setup_data_snapshot():
+    """
+    Set up database for interaction.
+    """
+    from tweepy_inter import authorize
+    from tweepy_inter import fetch_user_statuses
+
+    settings = {}
+    settings['db'] = os.environ.get(
+        'DATABASE_URL', LOCAL_CREDENTIALS)
+    with closing(connect_db(settings)) as db:
+        cursor = db.cursor()
+        # Write venues to locals table
+        # venue, screen_name, address, lat, long
+        # json.loads(response.content, response.encoding)['results'][0]['geometry']['location']['lat']
+        keyarena = ('Key Arena', 'KeyArenaSeattle', '305 Harrison Street, Seattle, WA 98109', 47.6219664, -122.3545531)
+        neumos = ('Neumos', 'Neumos', '925 East Pike Street, Seattle, WA 98122', 47.6219664, -122.3545531)
+        # moore = ('The Moore Theatre', '', '1932 2nd Ave, Seattle, WA 98101', 47.6117865, -122.3413842)
+        paramount = ('Paramount Theatre', 'BroadwaySeattle', '911 Pine Street, Seattle, WA 98101', 47.61347929999999, -122.3317273)
+        cursor.execute(WRITE_LOCALS_ENTRY, keyarena)
+        cursor.execute(WRITE_LOCALS_ENTRY, neumos)
+        cursor.execute(WRITE_LOCALS_ENTRY, paramount)
+        db.commit()
+
+        # Write tweets to tweets table
+        # parent_id, author_handle, content, time, count
+        # TODO: find a good way to get id of a venue in the locals table
+        api = authorize()
+        results = fetch_user_statuses(api, 'KeyArenaSeattle', reference=1)
+        cursor.executemany(WRITE_TWEET, results)
+        results = fetch_user_statuses(api, 'Neumos', reference=2)
+        cursor.executemany(WRITE_TWEET, results)
+        results = fetch_user_statuses(api, 'BroadwaySeattle', reference=3)
+        cursor.executemany(WRITE_TWEET, results)
         db.commit()
 
 
@@ -144,7 +183,6 @@ def write_entry(request):
 @view_config(route_name='home', renderer='templates/base.jinja2')
 def geo_json(request):
     """return a list of all entries as dicts"""
-   
     cursor = request.db.cursor()
     cursor.execute(SELECT_ENTRIES)
     keys = ('id', 'title', 'tweet', 'created', 'venue')
@@ -158,7 +196,7 @@ def main():
     settings['reload_all'] = os.environ.get('DEBUG', True)
     settings['debug_all'] = os.environ.get('DEBUG', True)
     settings['db'] = os.environ.get(
-        'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
+        'DATABASE_URL', LOCAL_CREDENTIALS)
     # secret value for session signing:
     secret = os.environ.get('JOURNAL_SESSION_SECRET', 'itsaseekrit')
     session_factory = SignedCookieSessionFactory(secret)
