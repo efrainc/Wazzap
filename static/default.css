@@ -21,9 +21,10 @@ h1, ul {margin: 0; font-size: 5em;}
   overflow: scroll;
   background-color: white;
   opacity: 0.9;
-  transform: translate(16em, 0px);
+  transform: translate(18em, 0px);
   transition: all 1s ease-out;
   border-radius: 20px;
+  padding: 0 10px 0 10px;
 }
 
 
@@ -32,8 +33,59 @@ h1, ul {margin: 0; font-size: 5em;}
 }
 
 .tweet {
-  padding: 10px;
+  padding: 10px 0 10px 0;
   border-bottom: 1px solid #e1e8ed;
 }
 
-.gmnoprint {display: none;}
+
+.tweet .time {
+  font-size: 14px;
+  float: right;
+}
+
+/*.gmnoprint {display: none;}*/
+
+      .controls {
+        margin-top: 16px;
+        border: 1px solid transparent;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        height: 32px;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      #pac-input {
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        width: 400px;
+      }
+
+      #pac-input:focus {
+        border-color: #4d90fe;
+        margin-left: -1px;
+        padding-left: 14px;  /* Regular padding-left + 1. */
+        width: 401px;
+      }
+
+      .pac-container {
+        font-family: Roboto;
+      }
+
+      #type-selector {
+        color: #fff;
+        background-color: #4d90fe;
+        padding: 5px 11px 0px 11px;
+      }
+
+      #type-selector label {
+        font-family: Roboto;
+        font-size: 13px;
+        font-weight: 300;
+      }
