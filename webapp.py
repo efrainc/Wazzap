@@ -47,7 +47,7 @@ SELECT "id", "venue", "screen_name", "address", "lat", "long" FROM "locals"
 """
 
 WRITE_LOCALS_ENTRY = """
-INSERT INTO "locals" ("venue", "screen_name", "address", "lat", "long") VALUES(%s, %s, %s, %s, %s)
+INSERT INTO "locals" ("venue", "screen_name", "address") VALUES(%s, %s, %s)
 """
 
 FETCH_LOCALS_ID = """
@@ -154,21 +154,49 @@ def setup_data_snapshot():
     settings['db'] = os.environ.get(
         'DATABASE_URL', LOCAL_CREDENTIALS)
     with closing(connect_db(settings)) as db:
-        cursor = db.cursor()
+        # cursor = db.cursor()
         # Write venues to locals table
         # venue, screen_name, address, lat, long
         # json.loads(response.content, response.encoding)['results'][0]['geometry']['location']['lat']
-        keyarena = ('Key Arena', 'KeyArenaSeattle', '305 Harrison Street, Seattle, WA 98109', 47.6219664, -122.3545531)
-        neumos = ('Neumos', 'Neumos', '925 East Pike Street, Seattle, WA 98122', 47.613843, -122.319716)
-        # moore = ('The Moore Theatre', '', '1932 2nd Ave, Seattle, WA 98101', 47.6117865, -122.3413842)
-        paramount = ('Paramount Theatre', 'BroadwaySeattle', '911 Pine Street, Seattle, WA 98101', 47.61347929999999, -122.3317273)
-        for info in [keyarena, neumos, paramount]:
-            write_local(info, db)
+        venue_list = []
+
+        venue_list.append(('Key Arena', 'KeyArenaSeattle',
+                           '305 Harrison Street, Seattle, WA 98109'))
+
+        venue_list.append(('Neumos', 'Neumos',
+                           '925 East Pike Street, Seattle, WA 98122'))
+
+        venue_list.append(('Paramount Theatre', 'BroadwaySeattle',
+                           '911 Pine Street, Seattle, WA 98101'))
+
+        venue_list.append(('Fremont Brewing', 'fremontbrewing',
+                           '1050 North 34th Street, Seattle, WA 98103'))
+
+        venue_list.append(('Tractor Tavern', 'tractortavern',
+                           '5213 Ballard Avenue Northwest, Seattle, WA 98107'))
+
+        venue_list.append(('Nectar Lounge', 'NectarLounge',
+                           '412 North 36th Street, Seattle, WA 98103'))
+
+        venue_list.append(('The Triple Door', 'TheTripleDoor',
+                           '216 Union Street, Seattle, WA 98101'))
+
+        venue_list.append(('The Showbox', 'ShowboxPresents',
+                           '1426 1st Avenue, Seattle, WA 98101'))
+
+        venue_list.append(('The Crocodile', 'thecrocodile',
+                           '2200 2nd Avenue, Seattle, WA 98121'))
+
+        venue_list.append(('Central Cinema', 'CentralCinema',
+                           '1411 21st Avenue, Seattle, WA 98122'))
+
+        for venue in venue_list:
+            write_local(venue, db)
 
         # Write tweets to tweets table
         # parent_id, author_handle, content, time, count
-        for handle in ['KeyArenaSeattle', 'Neumos', 'BroadwaySeattle']:
-            pull_tweets(handle, db)
+        for venue in venue_list:
+            pull_tweets(venue[1], db)
 
 
 def write_local(local_info_tuple, connection):
@@ -181,7 +209,8 @@ def pull_tweets(target_twitter_handle, connection):
     cursor = connection.cursor()
     cursor.execute(FETCH_LOCALS_ID, (target_twitter_handle,))
     refer = cursor.fetchone()[0]
-    results = fetch_user_statuses(authorize(), target_twitter_handle, reference=refer)
+    results = fetch_user_statuses(
+        authorize(), target_twitter_handle, reference=refer)
     cursor.executemany(WRITE_TWEET, results)
     connection.commit()
 
@@ -193,7 +222,6 @@ def pull_tweets(target_twitter_handle, connection):
 #     text = request.params.get('tweet', None)
 #     created = datetime.datetime.utcnow()
 #     request.db.cursor().execute(INSERT_ENTRY, [title, text, created])
-
 
 @view_config(route_name='home', renderer='templates/base.jinja2')
 def geo_json(request):
@@ -210,12 +238,13 @@ def geo_json(request):
 def get_tweets_from_db(request):
     cursor = request.db.cursor()
     cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
-    venue_info = cursor.fetchone()  
+    venue_info = cursor.fetchone()
     cursor.execute(READ_TWEET, [venue_info[0]])
     keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count')
     tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
     for tweet in tweets:
-        time_since = (datetime.datetime.now() - tweet['time']).seconds / 3600
+        time_since = int((
+            datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
         tweet['content'] = tweet['content']
         tweet['time'] = "{} hours ago".format(time_since)
     return {'venue': venue_info[1], 'tweets': tweets}
