@@ -18,6 +18,15 @@ env.key_filename = '~/.ssh/pk-waz.pem'
 env.myhost = 'ec2-52-10-224-242.us-west-2.compute.amazonaws.com'
 
 
+env.remote_directory = '~/wazzap'
+
+# change this line to the local location of your wazzap project:
+# Make sure to end the location with a / or else it will drop the
+# contents in as a child.
+
+env.local_directory = '~/projects/wazzap/'
+
+
 # def fab_test(name='none selected'):
 #     text = "".join(["Print: ", name])
 #     print env.get('active_instance')
@@ -28,6 +37,7 @@ def ssh(host_=None):
     """run an open shell"""
     run_command_on_selected_server(open_shell, host_=host_)
 
+
 def ssh_wazzap():
     ssh(host_=env.myhost)
 
@@ -36,17 +46,24 @@ def ssh_wazzap():
 #     run('uname -s')
 
 
+
 def _deploy_app():
     """run this on server to uploading app to server"""
-    upload_project(local_dir='~/projects/wazzap/')
+    rsync_project(env.remote_directory, env.local_directory,)
 
 
 def deploy_app(host_=None):
     """choose a in instance and upload app to server """
     run_command_on_selected_server(_deploy_app, host_=host_)
 
-def deploy_wazzap():
+
+def deploy_wazzap(l_dir=env.local_directory):
+    """Deploys wazzap to our remote location
+    Can set local location by using l_dir='<local path>'
+    """
+    env.local_directory = l_dir
     deploy_app(host_=env.myhost)
+
 
 def get_ec2_connection():
     """get an ec2 connection"""
@@ -148,6 +165,26 @@ def install_nginx(host_=None):
 
 def install_nginx_wazzap():
     install_nginx(host_=env.myhost)
+
+# def _superviord():
+    # Only use as needed - should be creating a new instance
+    # echo_supervisord_conf > supervisord.conf <-- Creats simple
+    # .conf file needs to be updated to include webapp.
+    # run locally before pushing.
+    # upload_project(local_dir='~/projects/wazzap/')
+    # sudo('apt-get install supervisor')
+    # run('supervisord')
+
+# def supervisord():
+#     run_command_on_selected_server(_supervisord)
+
+# ##############################
+# Kill Supervisord
+#  In serverice instance run -> ps -e
+#  find the instnace id of supervisord
+#  use "sudo kill id"
+#  restart instance as needed
+# #################################
 
 
 def provision_instance(wait_for_running=False, timeout=60, interval=2):

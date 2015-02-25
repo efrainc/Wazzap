@@ -28,7 +28,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-LOCAL_CREDENTIALS = 'dbname=webapp_original user=henryhowes password=admin'
+LOCAL_CREDENTIALS = 'dbname=postgres user=ubuntu password='
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
@@ -137,8 +137,23 @@ def init_db():
     Warning: This function will not update existing table definitions
     """
     settings = {}
-    settings['db'] = os.environ.get(
-        'DATABASE_URL', LOCAL_CREDENTIALS)
+    if os.environ.get('USER') == 'ubuntu':
+        import secrets
+        settings['db'] = secrets.dbase_connection()
+    elif os.environ.get('USER') == 'JustinKan':
+        settings['db'] = os.environ.get(
+            'DATABASE_URL', 'dbname=postgres user=JustinKan')
+    elif os.environ.get('USER') == 'efrain-petercamacho':
+        settings['db'] = os.environ.get(
+            'DATABASE_URL', 'dbname=postgres user=efrain-petercamacho')
+    elif os.environ.get('USER') == 'henryhowes':
+        settings['db'] = os.environ.get(
+            'DATABASE_URL', 'dbname=webbapp_original user=henryhowes')
+    elif os.environ.get('USERNAME') == 'jefimenko':
+        settings['db'] = os.environ.get(
+            'DATABASE_URL', 'dbname=postgres user=postgres password=admin')
+    else:
+        raise AttributeError('Not authorized to use database')
     with closing(connect_db(settings)) as db:
         # db.cursor().execute(DB_SCHEMA)
         db.cursor().execute(DB_LOCALS_SCHEMA)
@@ -255,8 +270,23 @@ def main():
     settings = {}
     settings['reload_all'] = os.environ.get('DEBUG', True)
     settings['debug_all'] = os.environ.get('DEBUG', True)
-    settings['db'] = os.environ.get(
-        'DATABASE_URL', LOCAL_CREDENTIALS)
+    if os.environ.get('USER') == 'ubuntu':
+        import secrets
+        settings['db'] = secrets.dbase_connection()
+    elif os.environ.get('USER') == 'JustinKan':
+        settings['db'] = os.environ.get(
+            'DATABASE_URL', 'dbname=postgres user=JustinKan')
+    elif os.environ.get('USER') == 'efrain-petercamacho':
+        settings['db'] = os.environ.get(
+            'DATABASE_URL', 'dbname=postgres user=efrain-petercamacho')
+    elif os.environ.get('USER') == 'henryhowes':
+        settings['db'] = os.environ.get(
+            'DATABASE_URL', 'dbname=webbapp_original user=henryhowes')
+    elif os.environ.get('USERNAME') == 'jefimenko':
+        settings['db'] = os.environ.get(
+            'DATABASE_URL', 'dbname=postgres user=postgres password=admin')
+    else:
+        raise AttributeError('Not authorized to use database')
     # secret value for session signing:
     secret = os.environ.get('JOURNAL_SESSION_SECRET', 'itsaseekrit')
     session_factory = SignedCookieSessionFactory(secret)
