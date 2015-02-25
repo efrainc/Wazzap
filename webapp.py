@@ -138,9 +138,11 @@ def init_db():
     Warning: This function will not update existing table definitions
     """
     settings = {}
-    settings['db'] = secrets.dbase_connection()
-    # settings['db'] = os.environ.get(
-    #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
+    # use this for online database:
+    #settings['db'] = secrets.dbase_connection()
+    # use this for settin up local database
+    settings['db'] = os.environ.get(
+        'DATABASE_URL', 'dbname=postgres user=JustinKan')
     with closing(connect_db(settings)) as db:
         # db.cursor().execute(DB_SCHEMA)
         db.cursor().execute(DB_LOCALS_SCHEMA)
@@ -228,9 +230,10 @@ def main():
     settings = {}
     settings['reload_all'] = os.environ.get('DEBUG', True)
     settings['debug_all'] = os.environ.get('DEBUG', True)
-    # settings['db'] = os.environ.get(
-    #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
-    settings['db'] = secrets.dbase_connection()
+    # local database:
+    settings['db'] = os.environ.get(
+        'DATABASE_URL', 'dbname=postgres user=JustinKan')
+    # settings['db'] = secrets.dbase_connection()
     # secret value for session signing:
     secret = os.environ.get('JOURNAL_SESSION_SECRET', 'itsaseekrit')
     session_factory = SignedCookieSessionFactory(secret)
