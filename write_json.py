@@ -6,9 +6,7 @@ if __name__ == "__main__":
 
     venues = ["305 Harrison Street, Seattle, WA 98109",
               "925 East Pike Street, Seattle, WA 98122",
-              "1932 2nd Ave, Seattle, WA 98101",
               "911 Pine Street, Seattle, WA 98101",
-              
               ]
     # venueGeoJSON = {"type": "FeatureCollection", "features": []}
     # geolocator = Nominatim()

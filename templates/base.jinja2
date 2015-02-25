@@ -16,34 +16,15 @@
       src="https://maps.googleapis.com/maps/api/js">
     </script>
     <script src="static/jquery-2.1.3.min.js"></script>
+    <script src="/static/mustache.min.js"></script>
   </head>
   <body>
     <header>
       <h1>Wazapp</h1>
-     <!--  <nav>
-        <ul>
-          <li><a href="/">Home</a></li>
-        </ul>
-      </nav> -->
     </header>
     <section id="content">
-     <!--  {% block body %}{% endblock %} -->
         <div id="map-canvas"></div>
-       <!--  {% for entry in entries %}
-          <article class="entry" id="entry={{entry.id}}">
-          <h3>{{ entry.title }}</h3>
-            <p class="dateline">{{ entry.created.strftime('%b. %d, %Y') }}
-            <div class="entry_body">
-            {{ entry.tweet|safe }}
-            </div>
-           </article>
-           {% else %}
-          <div class="entry">
-            <p><em>Map is Missing in Action</em></p>
-          </div>
-         {% endfor %} -->
-         <div id="sidebar">
-         </div>
+        <div id="sidebar"></div>
     </section>
     <footer>
         <script type="text/javascript">
@@ -83,27 +64,41 @@ var styles = [
 
 
         map.data.addListener('click', function(event) {
-          console.log(event.feature)
-          var lat = event.feature["k"]["lat"];
-          var lng = event.feature["k"]["lng"];
+          // console.log(event.feature)
+          var address = event.feature["k"]["address"].slice(0, -5);
+      
+          // TODO: add tweets to sidebar 
+          $.ajax({
+              url: '/gettweets',
+              type: 'GET',
+              dataType: 'json',
+              data: {'address': address},
+              success: function(result){
+                $('#sidebar').html("");
+                var venue_name = Mustache.to_html('<h2>[[venue]]</h2>', result);
+                $('#sidebar').append(venue_name);
+                var template = '<div class="tweet">'+
+                                  '<span class="user">[[author_handle]]</span>'+
+                                  '<span class="time">[[time]]</span>'+
+                                  '<p class="content">[[content]]';
 
-          //TODO: add tweets to sidebar 
-          // $.ajax({
-          //     url: '/getTweets',
-          //     type: 'GET',
-          //     dataType: 'json',
-          //     data: {'lat': lat, 'lng': lng},
-          //     success: function(result){
-          //     };
-          //});
-          $('#sidebar').toggleClass("sidebar--active");
+
+                var tweets = result.tweets;
+                for(var tweet in tweets){
+                  var html = Mustache.to_html(template, tweets[tweet]);
+                  $('#sidebar').append(html);
+                }
+                // for (var tweet in tweets){
+                //   console.log(tweet.content);
+                // }
+              },
+          });
+
+          $('#sidebar').addClass("sidebar--active");
         });
       }
       // Load geojson data
       google.maps.event.addDomListener(window, 'load', initialize);
-      // map.data.addListener('click', function(event) {
-      //   document.getElementById('sidebar').toggleClass(".sidebar--active");
-        // event.feature
     </script>
     </footer>
   </body>
