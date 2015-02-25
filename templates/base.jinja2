@@ -50,6 +50,8 @@
               data: {'address': address},
               success: function(result){
                 $('#sidebar').html("");
+                var venue_name = Mustache.to_html('<h2>[[venue]]</h2>', result);
+                $('#sidebar').append(venue_name);
                 var template = '<div class="tweet">'+
                                   '<span class="user">[[author_handle]]</span>'+
                                   '<span class="time">[[time]]</span>'+

@@ -66,12 +66,12 @@ CREATE TABLE IF NOT EXISTS "tweets" (
 )
 """
 
-GET_VENUE_ID = """
-SELECT id FROM locals WHERE address = %s
+GET_VENUE_INFO = """
+SELECT id, venue FROM locals WHERE address = %s
 """
 
 # {table from} {id to associate with}
-READ_TWEETS = """
+READ_TWEET = """
 SELECT id, parent_id, author_handle, content, time FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
@@ -209,16 +209,16 @@ def geo_json(request):
 @view_config(route_name='gettweets', renderer='json')
 def get_tweets_from_db(request):
     cursor = request.db.cursor()
-    cursor.execute(GET_VENUE_ID, (request.params.get('address', None), ))
-    venue_id = cursor.fetchone()
-    cursor.execute(READ_TWEETS, venue_id)
+    cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
+    venue_info = cursor.fetchone()  
+    cursor.execute(READ_TWEET, [venue_info[0]])
     keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count')
     tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
     for tweet in tweets:
         time_since = (datetime.datetime.now() - tweet['time']).seconds / 3600
-        tweet['content'] = tweet['content'].encode('utf-8')
+        tweet['content'] = tweet['content']
         tweet['time'] = "{} hours ago".format(time_since)
-    return {'tweets': tweets}
+    return {'venue': venue_info[1], 'tweets': tweets}
 
 
 def main():
