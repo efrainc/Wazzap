@@ -281,7 +281,7 @@ def main():
             'DATABASE_URL', 'dbname=postgres user=efrain-petercamacho')
     elif os.environ.get('USER') == 'henryhowes':
         settings['db'] = os.environ.get(
-            'DATABASE_URL', 'dbname=webbapp_original user=henryhowes')
+            'DATABASE_URL', 'dbname=webapp_original user=henryhowes')
     elif os.environ.get('USERNAME') == 'jefimenko':
         settings['db'] = os.environ.get(
             'DATABASE_URL', 'dbname=postgres user=postgres password=admin')
