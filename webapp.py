@@ -5,6 +5,7 @@ import logging
 import json
 import datetime
 import psycopg2
+import secrets
 from pyramid.config import Configurator
 from pyramid.session import SignedCookieSessionFactory
 from pyramid.view import view_config
@@ -28,7 +29,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-LOCAL_CREDENTIALS = 'dbname=webapp_original user=henryhowes password=admin'
+LOCAL_CREDENTIALS = 'dbname=postgres user=ubuntu password='
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
@@ -137,8 +138,9 @@ def init_db():
     Warning: This function will not update existing table definitions
     """
     settings = {}
-    settings['db'] = os.environ.get(
-        'DATABASE_URL', LOCAL_CREDENTIALS)
+    settings['db'] = secrets.dbase_connection()
+    # settings['db'] = os.environ.get(
+    #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
     with closing(connect_db(settings)) as db:
         # db.cursor().execute(DB_SCHEMA)
         db.cursor().execute(DB_LOCALS_SCHEMA)
@@ -226,8 +228,9 @@ def main():
     settings = {}
     settings['reload_all'] = os.environ.get('DEBUG', True)
     settings['debug_all'] = os.environ.get('DEBUG', True)
-    settings['db'] = os.environ.get(
-        'DATABASE_URL', LOCAL_CREDENTIALS)
+    # settings['db'] = os.environ.get(
+    #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
+    settings['db'] = secrets.dbase_connection()
     # secret value for session signing:
     secret = os.environ.get('JOURNAL_SESSION_SECRET', 'itsaseekrit')
     session_factory = SignedCookieSessionFactory(secret)
