@@ -38,8 +38,6 @@ CREATE TABLE IF NOT EXISTS locals (
     venue VARCHAR(127) NOT NULL,
     screen_name VARCHAR(127) NOT NULL,
     address TEXT NOT NULL,
-    lat NUMERIC NOT NULL,
-    long NUMERIC NOT NULL
 )
 """
 
@@ -59,13 +57,17 @@ DB_TWEETS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS "tweets" (
     "id" serial PRIMARY KEY,
 
-    "parent_id" INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE NO ACTION,
+    "parent_id" INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE CASCADE,
     "author_handle" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "time" TIMESTAMP NOT NULL,
     "count" INTEGER NOT NULL
 )
 """
+# TODO: edit tweets schema
+# add _ profile_image_url
+# status id
+# TODO: update tweepy_inter.fetch_user_statuses() to match
 
 GET_VENUE_INFO = """
 SELECT id, venue FROM locals WHERE address = %s
@@ -160,10 +162,10 @@ def setup_data_snapshot():
         # Write venues to locals table
         # venue, screen_name, address, lat, long
         # json.loads(response.content, response.encoding)['results'][0]['geometry']['location']['lat']
-        keyarena = ('Key Arena', 'KeyArenaSeattle', '305 Harrison Street, Seattle, WA 98109', 47.6219664, -122.3545531)
-        neumos = ('Neumos', 'Neumos', '925 East Pike Street, Seattle, WA 98122', 47.613843, -122.319716)
+        keyarena = ('Key Arena', 'KeyArenaSeattle', '305 Harrison Street, Seattle, WA 98109')
+        neumos = ('Neumos', 'Neumos', '925 East Pike Street, Seattle, WA 98122')
         # moore = ('The Moore Theatre', '', '1932 2nd Ave, Seattle, WA 98101', 47.6117865, -122.3413842)
-        paramount = ('Paramount Theatre', 'BroadwaySeattle', '911 Pine Street, Seattle, WA 98101', 47.61347929999999, -122.3317273)
+        paramount = ('Paramount Theatre', 'BroadwaySeattle', '911 Pine Street, Seattle, WA 98101')
         for info in [keyarena, neumos, paramount]:
             write_local(info, db)
 
