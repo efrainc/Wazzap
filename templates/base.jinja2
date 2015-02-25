@@ -26,6 +26,10 @@
         <div id="map-canvas"></div>
         <div id="sidebar"></div>
     </section>
+    <form id="location" action="{{ request.route_url('location') }}" method="POST">
+      <input type="text" placeholder="Enter a Location" name="Location">
+      <input type="submit" value="Search" name="Share"/>
+    </form>
     <footer>
         <script type="text/javascript">
       var map;
@@ -41,8 +45,7 @@
         map.data.addListener('click', function(event) {
           // console.log(event.feature)
           var address = event.feature["k"]["address"].slice(0, -5);
-      
-          // TODO: add tweets to sidebar 
+          // TODO: add tweets to sidebar
           $.ajax({
               url: '/gettweets',
               type: 'GET',

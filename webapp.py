@@ -5,7 +5,7 @@ import logging
 import json
 import datetime
 import psycopg2
-import secrets
+# import secrets
 from pyramid.config import Configurator
 from pyramid.session import SignedCookieSessionFactory
 from pyramid.view import view_config
@@ -13,6 +13,7 @@ from pyramid.events import NewRequest, subscriber
 from waitress import serve
 from contextlib import closing
 from geopy.geocoders import Nominatim
+from pyramid.httpexceptions import HTTPFound, HTTPInternalServerError
 
 from tweepy_inter import authorize
 from tweepy_inter import fetch_user_statuses
@@ -29,7 +30,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-LOCAL_CREDENTIALS = 'dbname=postgres user=ubuntu password='
+LOCAL_CREDENTIALS = 'dbname=postgres user=efrain-petercamacho password='
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
@@ -59,7 +60,7 @@ DB_TWEETS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS "tweets" (
     "id" serial PRIMARY KEY,
 
-    "parent_id" INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE NO ACTION,
+    "parent_id" INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE CASCADE,
     "author_handle" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "time" TIMESTAMP NOT NULL,
@@ -95,6 +96,9 @@ SELECT_ENTRIES = """
 SELECT id, title, tweet, created, venue FROM entries ORDER BY created DESC
 """
 
+DELETE_ENTRIES = """
+DELETE FROM  locals WHERE venue = %s
+"""
 
 logging.basicConfig()
 log = logging.getLogger(__file__)
@@ -138,9 +142,9 @@ def init_db():
     Warning: This function will not update existing table definitions
     """
     settings = {}
-    settings['db'] = secrets.dbase_connection()
-    # settings['db'] = os.environ.get(
-    #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
+    # settings['db'] = secrets.dbase_connection()
+    settings['db'] = os.environ.get(
+        'DATABASE_URL', LOCAL_CREDENTIALS)
     with closing(connect_db(settings)) as db:
         # db.cursor().execute(DB_SCHEMA)
         db.cursor().execute(DB_LOCALS_SCHEMA)
@@ -188,6 +192,11 @@ def pull_tweets(target_twitter_handle, connection):
     connection.commit()
 
 
+def delete_items_local(venue, connection):
+    cursor = connection.cursor()
+    cursor.execute(DELETE_ENTRIES, (venue, None))
+    connection.commit()
+
 
 # def write_entry(request):
 #     """write a single entry to the database"""
@@ -212,7 +221,7 @@ def geo_json(request):
 def get_tweets_from_db(request):
     cursor = request.db.cursor()
     cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
-    venue_info = cursor.fetchone()  
+    venue_info = cursor.fetchone()
     cursor.execute(READ_TWEET, [venue_info[0]])
     keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count')
     tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
@@ -222,15 +231,31 @@ def get_tweets_from_db(request):
         tweet['time'] = "{} hours ago".format(time_since)
     return {'venue': venue_info[1], 'tweets': tweets}
 
+@view_config(route_name='location', request_method='POST', renderer="json")
+def get_input_location(request):
+    """return the user input should be a location"""
+    settings = {}
+    settings['db'] = os.environ.get(
+    'DATABASE_URL', LOCAL_CREDENTIALS)
+    request.params.get('location', None)
+
+    ###run location to get json for write function
+
+    if request is not None:
+        write_local(("json_string"), settings['db'])
+    else:
+        show_top_options
+        return "json string with options"
+    return "json String"
 
 def main():
     """Create a configured wsgi app"""
     settings = {}
     settings['reload_all'] = os.environ.get('DEBUG', True)
     settings['debug_all'] = os.environ.get('DEBUG', True)
-    # settings['db'] = os.environ.get(
-    #     'DATABASE_URL', 'dbname=webapp_deployed_test user=ubuntu')
-    settings['db'] = secrets.dbase_connection()
+    settings['db'] = os.environ.get(
+        'DATABASE_URL', LOCAL_CREDENTIALS)
+    # settings['db'] = secrets.dbase_connection()
     # secret value for session signing:
     secret = os.environ.get('JOURNAL_SESSION_SECRET', 'itsaseekrit')
     session_factory = SignedCookieSessionFactory(secret)
@@ -242,6 +267,7 @@ def main():
     config.include('pyramid_jinja2')
     config.add_route('home', '/')
     config.add_route('gettweets', '/gettweets')
+    config.add_route('location', '/location')
     config.add_static_view('static', os.path.join(here, 'static'))
     config.scan()
     app = config.make_wsgi_app()

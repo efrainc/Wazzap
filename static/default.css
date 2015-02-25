@@ -26,6 +26,13 @@ h1, ul {margin: 0; font-size: 5em;}
   border-radius: 20px;
 }
 
+#location {
+  position: absolute;
+  top: 1em;
+  left: 3em;
+  opacity: 0.7;
+
+}
 
 .sidebar--active {
   transform: translate(0px, 0px) !important;
