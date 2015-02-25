@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS "tweets" (
     "author_handle" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "time" TIMESTAMP NOT NULL,
-    "count" INTEGER NOT NULL
+    "count" INTEGER NOT NULL,
+    "status_id" INTEGER NOT NULL
 )
 """
 
@@ -77,7 +78,7 @@ SELECT id, parent_id, author_handle, content, time FROM tweets WHERE parent_id =
 
 # {table name} {data from one tweet}
 WRITE_TWEET = """
-INSERT INTO tweets (parent_id, author_handle, content, time, count) VALUES(%s, %s, %s, %s, %s)
+INSERT INTO tweets (parent_id, author_handle, content, time, count, status_id) VALUES(%s, %s, %s, %s, %s, %s)
 """
 
 # {table name} {content to match}
@@ -90,9 +91,9 @@ UPDATE tweets SET count = count + 1 WHERE content = %s
 # INSERT INTO entries (title, text, created) VALUES (%s, %s, %s)
 # """
 
-SELECT_ENTRIES = """
-SELECT id, title, tweet, created, venue FROM entries ORDER BY created DESC
-"""
+# SELECT_ENTRIES = """
+# SELECT id, title, tweet, created, venue FROM entries ORDER BY created DESC
+# """
 
 
 logging.basicConfig()
@@ -255,7 +256,7 @@ def get_tweets_from_db(request):
     cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
     venue_info = cursor.fetchone()
     cursor.execute(READ_TWEET, [venue_info[0]])
-    keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count')
+    keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
     tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
     for tweet in tweets:
         time_since = int((
@@ -303,6 +304,15 @@ def main():
     app = config.make_wsgi_app()
     return app
 
+DELETE_TWEETS = """
+DELETE FROM tweets
+"""
+
+
+def clear_database(connection):
+    cursor = connection.cursor()
+    cursor.execute(DELETE_TWEETS)
+    connection.commit()
 
 if __name__ == '__main__':
     app = main()
