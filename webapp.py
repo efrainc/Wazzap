@@ -251,6 +251,29 @@ def geo_json(request):
     return {'entries': entries}
 
 
+@view_config(route_name='writelocation', request_method='POST', renderer='json')
+def write_input_location(request):
+    # get twitter handle
+    import pdb; pdb.set_trace()
+    api = authorize()
+    # Get the handle of the first-most result from twitter's user search
+    handle_guess = api.search_users(
+        '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
+    # venue, twitter, address
+    # write_local((request.params.get('venue'),
+    #             handle_guess,
+    #             request.params.get('address')),
+    #             request.db)
+
+    # Pull tweets for a guessed handle associated with a location name
+    # pull_tweets(handle_guess, request.db)
+    # Place pin on map?
+
+    return {'venue_guess': request.params.get('venue'),
+            'handle_guess': handle_guess,
+            'address_guess': request.params.get('address')}
+
+
 @view_config(route_name='gettweets', renderer='json')
 def get_tweets_from_db(request):
     cursor = request.db.cursor()
@@ -300,6 +323,7 @@ def main():
     config.include('pyramid_jinja2')
     config.add_route('home', '/')
     config.add_route('gettweets', '/gettweets')
+    config.add_route('writelocation', '/writelocation')
     config.add_static_view('static', os.path.join(here, 'static'))
     config.scan()
     app = config.make_wsgi_app()
