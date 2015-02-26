@@ -55,6 +55,17 @@ var searchBox = new google.maps.places.SearchBox((input));
 google.maps.event.addListener(searchBox, 'places_changed', function() {
 var places = searchBox.getPlaces();
 
+$.ajax({
+            url: '/writelocation',
+            type: 'POST',
+            dataType: 'json',
+            data: {'venue': places[0].name,'address': places[0].formatted_address},
+            success: function(result){
+              // get lat long from address
+              // create a new pin
+            }
+          })
+
 if (places.length == 0) {
 return;
 }
@@ -82,7 +93,8 @@ var marker = new google.maps.Marker({
   position: place.geometry.location
 });
 
-markers.push(marker);
+marker.setMap(null)
+// markers.push(marker);
 
 // bounds.extend(place.geometry.location);
 map.panTo(place.geometry.location);
