@@ -261,10 +261,13 @@ def write_input_location(request):
     handle_guess = api.search_users(
         '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
     # venue, twitter, address
-    # write_local((request.params.get('venue'),
-    #             handle_guess,
-    #             request.params.get('address')),
-    #             request.db)
+    # Write/pull tweets regardless of correctness of twitter handle/address for now
+    # TODO: have user verification
+    write_local((request.params.get('venue'),
+                handle_guess,
+                request.params.get('address')),
+                request.db)
+    pull_tweets(handle_guess, request.db)
 
     # Pull tweets for a guessed handle associated with a location name
     # pull_tweets(handle_guess, request.db)
