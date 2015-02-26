@@ -356,20 +356,3 @@ if __name__ == '__main__':
     app = main()
     port = os.environ.get('PORT', 8000)
     serve(app, host='127.0.0.1', port=port)
-  
-    def update_tweets_db():
-        login = authorize()
-        settings = {}
-        settings['db'] = os.environ.get(
-            'DATABASE_URL', 'dbname=test_wazzap user=efrain-petercamacho')
-        with closing(connect_db(settings)) as db:
-            handlers_list = pull_handle(db)
-            for handel in handlers_list:
-                fetch_user_statuses(login, handel)
-        threading.Timer(800.0, update_tweets_db).start()
-
-    try:
-        update_tweets_db()
-    except KeyboardInterrupt:
-        print "exited"
-
