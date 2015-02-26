@@ -1,15 +1,11 @@
 function initialize() {
-// //   var mapOptions = {
-// //     center: { lat: 47.645101, lng: 237.658112},
-// //     zoom: 13
-// // };
 
   var mapOptions = {
     mapTypeId: google.maps.MapTypeId.ROADMAP,
     streetViewControl: false,
-    mapTypeControl: false
-  //    center: { lat: 47.645101, lng: 237.658112},
-  //    zoom: 13
+    mapTypeControl: false,
+    center: { lat: 47.645101, lng: 237.658112},
+    zoom: 13
   };
 
   // Create icons
@@ -24,12 +20,12 @@ function initialize() {
     anchor: iconAnchor
   };
 
-  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+  var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
   map.data.loadGeoJson("/static/venue.json");
 
   map.data.setStyle({
-    icon: '//s3-us-west-2.amazonaws.com/wassap/hifi.png',
+    icon: '/static/hifi.png',
     fillColor: 'green'
   });
 
@@ -70,17 +66,15 @@ function initialize() {
       ]
     }];
 
-  map.setOptions({styles: styles});
+    map.setOptions({styles: styles});
 
-var markers = [];
-// var map = new google.maps.Map(document.getElementById('map-canvas'), {
-//   mapTypeId: google.maps.MapTypeId.ROADMAP
-// });
+    var markers = [];
 
-var defaultBounds = new google.maps.LatLngBounds(
-new google.maps.LatLng(47.620101, 237.645112),
-new google.maps.LatLng(47.657101, 237.670112));
-map.fitBounds(defaultBounds);
+
+// var defaultBounds = new google.maps.LatLngBounds(
+// new google.maps.LatLng(47.620101, 237.645112),
+// new google.maps.LatLng(47.657101, 237.670112));
+// map.fitBounds(defaultBounds);
 
 // Create the search box and link it to the UI element.
 var input = /** @type {HTMLInputElement} */(
@@ -93,18 +87,26 @@ var searchBox = new google.maps.places.SearchBox((input));
 // Listen for the event fired when the user selects an item from the
 // pick list. Retrieve the matching places for that item.
 google.maps.event.addListener(searchBox, 'places_changed', function() {
-var places = searchBox.getPlaces();
+  var places = searchBox.getPlaces();
 
-$.ajax({
-            url: '/writelocation',
-            type: 'POST',
-            dataType: 'json',
-            data: {'venue': places[0].name,'address': places[0].formatted_address},
-            success: function(result){
-              // get lat long from address
-              // create a new pin
-            }
-          })
+  // var geojson = JSON.parse(places);
+  // map.data.addGeoJson(places);
+  // var featurized = Data.Feature(places[0]);
+  // map.data.add(places[0].geometry);
+  var feature = map.data.add(places[0].geometry);
+  map.data.setMap(map);
+
+
+  $.ajax({
+              url: '/writelocation',
+              type: 'POST',
+              dataType: 'json',
+              data: {'venue': places[0].name,'address': places[0].formatted_address},
+              success: function(result){
+                // get lat long from address
+                // create a new pin
+              }
+            })
 
 if (places.length == 0) {
 return;
