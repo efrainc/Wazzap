@@ -17,6 +17,7 @@ from geopy.geocoders import Nominatim
 
 from tweepy_inter import authorize
 from tweepy_inter import fetch_user_statuses
+from write_json import add_venue
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -267,6 +268,7 @@ def write_input_location(request):
                 handle_guess,
                 request.params.get('address')),
                 request.db)
+    add_venue(request.params.get('address'))
     pull_tweets(handle_guess, request.db)
 
     # Pull tweets for a guessed handle associated with a location name
@@ -283,11 +285,10 @@ def get_tweets_from_db(request):
     cursor = request.db.cursor()
     cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
     venue_info = cursor.fetchone()
+    cursor.execute(READ_TWEET, [venue_info[0]])
+    tweets = cursor.fetchall()
 
-    if venue_info:
-        cursor.execute(READ_TWEET, [venue_info[0]])
-        tweets = cursor.fetchall()
-
+    if tweets:
         keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
         tweets = [dict(zip(keys, row)) for row in tweets]
         for tweet in tweets:
@@ -296,7 +297,7 @@ def get_tweets_from_db(request):
             tweet['content'] = tweet['content']
             tweet['time'] = "{} hours ago".format(time_since)
     else:
-        tweets = [{'content': "Sorry, there don't seem to be any tweets..."}]
+        tweets = None
 
     return {'venue': venue_info[1], 'tweets': tweets}
 
