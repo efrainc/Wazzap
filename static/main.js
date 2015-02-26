@@ -1,12 +1,5 @@
 function initialize() {
-<<<<<<< HEAD
-// //   var mapOptions = {
-// //     center: { lat: 47.645101, lng: 237.658112},
-// //     zoom: 13
-// // };
-=======
 
->>>>>>> d057c44b28b6d4ab1c6a0deae731a0a79eb50266
   var mapOptions = {
     mapTypeId: google.maps.MapTypeId.ROADMAP,
     streetViewControl: false,
