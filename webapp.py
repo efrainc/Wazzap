@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS locals (
 """
 
 READ_LOCALS_ENTRY = """
-SELECT "id", "venue", "screen_name", "address", "lat", "long" FROM "locals"
+SELECT "id", "venue", "screen_name", "address" FROM "locals"
 """
 
 WRITE_LOCALS_ENTRY = """
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS "tweets" (
     "content" TEXT NOT NULL,
     "time" TIMESTAMP NOT NULL,
     "count" INTEGER NOT NULL,
-    "status_id" INTEGER NOT NULL
+    "status_id" TEXT NOT NULL
 )
 """
 # TODO: edit tweets schema
@@ -75,7 +75,7 @@ SELECT id, venue FROM locals WHERE address = %s
 
 # {table from} {id to associate with}
 READ_TWEET = """
-SELECT id, parent_id, author_handle, content, time FROM tweets WHERE parent_id = %s ORDER BY time DESC
+SELECT id, parent_id, author_handle, content, time, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
 # {table name} {data from one tweet}
@@ -255,7 +255,7 @@ def geo_json(request):
 @view_config(route_name='writelocation', request_method='POST', renderer='json')
 def write_input_location(request):
     # get twitter handle
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     api = authorize()
     # Get the handle of the first-most result from twitter's user search
     handle_guess = api.search_users(
