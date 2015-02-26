@@ -51,7 +51,7 @@ def fetch_user_statuses(api, target_twitter_handle=None, reference=0, how_many_t
                     author = target_twitter_handle  # Venue twitter handle
 
                 content.append(
-                    [reference, author, tweet.text.encode('utf-8'), tweet.created_at, 1]
+                    [reference, author, tweet.text.encode('utf-8'), tweet.created_at, 1, tweet.id_str]
                 )
         except KeyError:
             pass

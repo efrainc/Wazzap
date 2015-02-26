@@ -8,6 +8,7 @@ ecdsa==0.13
 geopy==1.9.1
 oauthlib==0.7.2
 paramiko==1.15.2
+parsedatetime==1.4
 psycopg2==2.6
 pycrypto==2.6.1
 pyramid==1.5.3

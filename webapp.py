@@ -30,7 +30,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-LOCAL_CREDENTIALS = 'dbname=postgres user=ubuntu password='
+LOCAL_CREDENTIALS = 'dbname=postgres user=postgres password=admin'
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS locals (
 """
 
 READ_LOCALS_ENTRY = """
-SELECT "id", "venue", "screen_name", "address", "lat", "long" FROM "locals"
+SELECT "id", "venue", "screen_name", "address" FROM "locals"
 """
 
 WRITE_LOCALS_ENTRY = """
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "tweets" (
     "content" TEXT NOT NULL,
     "time" TIMESTAMP NOT NULL,
     "count" INTEGER NOT NULL,
-    "status_id" INTEGER NOT NULL
+    "status_id" TEXT NOT NULL
 )
 """
 # TODO: edit tweets schema
@@ -77,7 +77,7 @@ SELECT id, venue FROM locals WHERE address = %s
 
 # {table from} {id to associate with}
 READ_TWEET = """
-SELECT id, parent_id, author_handle, content, time FROM tweets WHERE parent_id = %s ORDER BY time DESC
+SELECT id, parent_id, author_handle, content, time, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
 # {table name} {data from one tweet}
@@ -229,7 +229,10 @@ def pull_tweets(target_twitter_handle, connection):
     tweet_ids = cursor.fetchall()
     results = fetch_user_statuses(
         authorize(), target_twitter_handle, reference=refer)
-
+    edited_list = results
+    for item in edited_list:
+        if tweet_ids == item[-1]:
+            results.remove(item)
     cursor.executemany(WRITE_TWEET, results)
     connection.commit()
 
@@ -254,10 +257,14 @@ def write_input_location(request):
     handle_guess = api.search_users(
         '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
     # venue, twitter, address
-    # write_local((request.params.get('venue'),
-    #             handle_guess,
-    #             request.params.get('address')),
-    #             request.db)
+
+    # Write/pull tweets regardless of correctness of twitter handle/address for now
+    # TODO: have user verification
+    write_local((request.params.get('venue'),
+                handle_guess,
+                request.params.get('address')),
+                request.db)
+    pull_tweets(handle_guess, request.db)
 
     # Pull tweets for a guessed handle associated with a location name
     # pull_tweets(handle_guess, request.db)

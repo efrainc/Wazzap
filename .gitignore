@@ -55,3 +55,4 @@ target/
 
 # Webapp secrets
 secrets.py
+secrets2.py

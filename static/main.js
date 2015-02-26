@@ -13,6 +13,58 @@ function initialize() {
       stylers: [
         { hue: "#00ffe6" },
         { saturation: -20 }
+
+
+  var mapOptions = {
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
+    streetViewControl: false,
+    mapTypeControl: false
+  //    center: { lat: 47.645101, lng: 237.658112},
+  //    zoom: 13
+  };
+
+  // Create icons
+  var iconURL = 'https://s3-us-west-2.amazonaws.com/wassap/hifi.png';
+  var iconSize = new google.maps.Size(34 ,34);
+  var iconOrigin = new google.maps.Point(0,0);
+  var iconAnchor = new google.maps.Point(10,34);
+  var myIcon = {
+    url: iconURL,
+    size: iconSize, 
+    origin: iconOrigin,
+    anchor: iconAnchor
+  };
+
+  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+  map.data.loadGeoJson("/static/venue.json");
+
+  map.data.setStyle({
+    icon: '//s3-us-west-2.amazonaws.com/wassap/hifi.png',
+    fillColor: 'green'
+  });
+
+  // Create a marker for each place using icons
+  var marker = new google.maps.Marker({
+    map: map,
+    icon: myIcon,
+    title: 'test',
+    position: new google.maps.LatLng(47.650101, 237.65112)
+  });
+
+
+  var styles = [
+    {
+      "featureType": "water",
+      "stylers": [
+        { "hue": "#0044ff" },
+        { "lightness": -17 }
+      ]
+    },{
+      "featureType": "poi.park",
+      "stylers": [
+        { "hue": "#3bff00" },
+        { "lightness": -18 }
       ]
     },{
       featureType: "road",
