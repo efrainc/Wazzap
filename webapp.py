@@ -145,7 +145,7 @@ def init_db():
             'DATABASE_URL', 'dbname=postgres user=JustinKan')
     elif os.environ.get('USER') == 'efrain-petercamacho':
         settings['db'] = os.environ.get(
-            'DATABASE_URL', 'dbname=postgres user=efrain-petercamacho')
+            'DATABASE_URL', 'dbname=test_wazzap user=efrain-petercamacho')
     elif os.environ.get('USER') == 'henryhowes':
         settings['db'] = os.environ.get(
             'DATABASE_URL', 'dbname=webbapp_original user=henryhowes')
@@ -304,7 +304,7 @@ def main():
             'DATABASE_URL', 'dbname=postgres user=JustinKan')
     elif os.environ.get('USER') == 'efrain-petercamacho':
         settings['db'] = os.environ.get(
-            'DATABASE_URL', 'dbname=postgres user=efrain-petercamacho')
+            'DATABASE_URL', 'dbname=test_wazzap user=efrain-petercamacho')
     elif os.environ.get('USER') == 'henryhowes':
         settings['db'] = os.environ.get(
             'DATABASE_URL', 'dbname=webapp_original user=henryhowes')
@@ -356,17 +356,20 @@ if __name__ == '__main__':
     app = main()
     port = os.environ.get('PORT', 8000)
     serve(app, host='127.0.0.1', port=port)
-
-    while True:
+  
+    def update_tweets_db():
         login = authorize()
-        time.sleep(800)
         settings = {}
         settings['db'] = os.environ.get(
-                         'DATABASE_URL', LOCAL_CREDENTIALS)
+            'DATABASE_URL', 'dbname=test_wazzap user=efrain-petercamacho')
         with closing(connect_db(settings)) as db:
             handlers_list = pull_handle(db)
             for handel in handlers_list:
-                instance = threading.Thread(target=fetch_user_statuses,
-                           args=(login, handel))
-                instance.start()
+                fetch_user_statuses(login, handel)
+        threading.Timer(800.0, update_tweets_db).start()
+
+    try:
+        update_tweets_db()
+    except KeyboardInterrupt:
+        print "exited"
 
