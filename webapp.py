@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS locals (
 
     venue VARCHAR(127) NOT NULL,
     screen_name VARCHAR(127) NOT NULL,
-    address TEXT NOT NULL,
+    address TEXT NOT NULL
 )
 """
 
@@ -77,7 +77,7 @@ SELECT id, venue FROM locals WHERE address = %s
 
 # {table from} {id to associate with}
 READ_TWEET = """
-SELECT id, parent_id, author_handle, content, time, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
+SELECT id, parent_id, author_handle, content, time, count, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
 # {table name} {data from one tweet}
@@ -225,14 +225,17 @@ def pull_tweets(target_twitter_handle, connection):
     cursor = connection.cursor()
     cursor.execute(FETCH_LOCALS_ID, (target_twitter_handle,))
     refer = cursor.fetchone()[0]
-    cursor.execute(FILTER_SAME_TWEET, refer)
-    tweet_ids = cursor.fetchall()
+
+    # Filter out tweets that are already in the database
+    # cursor.execute(FILTER_SAME_TWEET, refer)
+    # tweet_ids = cursor.fetchall()
     results = fetch_user_statuses(
         authorize(), target_twitter_handle, reference=refer)
-    edited_list = results
-    for item in edited_list:
-        if tweet_ids == item[-1]:
-            results.remove(item)
+    # edited_list = results
+    # for item in edited_list:
+    #     if tweet_ids == item[-1]:
+    #         results.remove(item)
+
     cursor.executemany(WRITE_TWEET, results)
     connection.commit()
 
@@ -280,14 +283,21 @@ def get_tweets_from_db(request):
     cursor = request.db.cursor()
     cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
     venue_info = cursor.fetchone()
-    cursor.execute(READ_TWEET, [venue_info[0]])
-    keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
-    tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
-    for tweet in tweets:
-        time_since = int((
-            datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
-        tweet['content'] = tweet['content']
-        tweet['time'] = "{} hours ago".format(time_since)
+
+    if venue_info:
+        cursor.execute(READ_TWEET, [venue_info[0]])
+        tweets = cursor.fetchall()
+
+        keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
+        tweets = [dict(zip(keys, row)) for row in tweets]
+        for tweet in tweets:
+            time_since = int((
+                datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
+            tweet['content'] = tweet['content']
+            tweet['time'] = "{} hours ago".format(time_since)
+    else:
+        tweets = [{'content': "Sorry, there don't seem to be any tweets..."}]
+
     return {'venue': venue_info[1], 'tweets': tweets}
 
 
