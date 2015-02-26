@@ -15,18 +15,13 @@ if __name__ == "__main__":
               '1411 21st Avenue, Seattle, WA 98122',
               '412 North 36th Street, Seattle, WA 98103'
               ]
-    # venueGeoJSON = {"type": "FeatureCollection", "features": []}
-    # geolocator = Nominatim()
+  
     total_result = {'type': 'FeatureCollection', 'features': []}
 
     for venue in venues:
         geocoded = geocoder.google(venue)
         geojson = geocoded.geojson
         total_result['features'].append(geojson)
-   
-
-        # venueRawJSON = geolocator.geocode(venue, geometry="geojson").raw
-        # venueGeoJSON["features"].append(venueRawJSON)
 
     with open('static/venue.json', 'w') as outfile:
         json.dump(total_result, outfile)
