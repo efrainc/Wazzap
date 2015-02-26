@@ -81,10 +81,41 @@ function initialize() {
 
   var searchBox = new google.maps.places.SearchBox((input));
 
-// Listen for the event fired when the user selects an item from the
-// pick list. Retrieve the matching places for that item.
-google.maps.event.addListener(searchBox, 'places_changed', function() {
+  // Listen for the event fired when the user selects an item from the
+  // pick list. Retrieve the matching places for that item.
+  google.maps.event.addListener(searchBox, 'places_changed', function() {
   var places = searchBox.getPlaces();
+
+  $.ajax({
+              url: '/writelocation',
+              type: 'POST',
+              dataType: 'json',
+              data: {'venue': places[0].name,'address': places[0].formatted_address.slice(0, -15)},
+              success: function(result){
+                // get lat long from address
+                // create a new pin
+              }
+            })
+
+
+  // Create a marker for each place.
+  var marker = new google.maps.Marker({
+    map: map,
+    icon: myIcon,
+    title: places[0].name,
+    position: places[0].geometry.location,
+    address: places[0].formatted_address.slice(0, -15)
+  });
+  google.maps.event.addListener(marker, 'click', function() {
+    display_tweets(marker.address);
+  });
+
+  // bounds.extend(place.geometry.location);
+  map.panTo(places[0].geometry.location);
+
+  // map.fitBounds(bounds);
+  });
+
 
   $.ajax({
       url: '/writelocation',
@@ -144,44 +175,47 @@ google.maps.event.addListener(searchBox, 'places_changed', function() {
 
   map.data.addListener('click', function(event) {
     var address = event.feature["k"]["address"].slice(0, -5);
-
-    $.ajax({
-        url: '/gettweets',
-        type: 'GET',
-        dataType: 'json',
-        data: {'address': address},
-        success: function(result){
-          $('#sidebar').html("");
-          var venue_name = Mustache.to_html('<h2>{{venue}}</h2>', result);
-          $('#sidebar').append(venue_name);
-          var template = '<div class="tweet">'+
-                            '<span class="user">{{author_handle}}</span>'+
-                            '<span class="time">{{time}}</span>'+
-                            '<p class="content">{{{content}}}'+
-                          '</div>';
-
-          var tweets = result.tweets;
-          for(var tweet in tweets){
-            tweet_content = tweets[tweet].content.split(" ");
-            for (var word in tweet_content){
-              if (tweet_content[word][0] == '@'){
-                tweet_content[word] = tweet_content[word].replace(":","");
-                tweet_content[word] = "<a href='https://twitter.com/"+ tweet_content[word].substring(1) + "'>"+tweet_content[word]+"</a>";
-              }
-              else if (tweet_content[word].substring(0, 4) == 'http'){
-                tweet_content[word] = "<a href='" + tweet_content[word] + "'>"+tweet_content[word]+"</a>";
-              }
-            }
-            tweets[tweet].content = tweet_content.join(" ");
-
-            var html = Mustache.to_html(template, tweets[tweet]);
-            $('#sidebar').append(html);
-          }
-        },
-    });
-
-    $('#sidebar').addClass("sidebar--active");
+      display_tweets(address)
   });
 }
+
+function display_tweets(address) {
+  $.ajax({
+      url: '/gettweets',
+      type: 'GET',
+      dataType: 'json',
+      data: {'address': address},
+      success: function(result){
+        $('#sidebar').html("");
+        var venue_name = Mustache.to_html('<h2>{{venue}}</h2>', result);
+        $('#sidebar').append(venue_name);
+        var template = '<div class="tweet">'+
+                          '<span class="user">{{author_handle}}</span>'+
+                          '<span class="time">{{time}}</span>'+
+                          '<p class="content">{{{content}}}'+
+                        '</div>';
+
+        var tweets = result.tweets;
+        for(var tweet in tweets){
+          tweet_content = tweets[tweet].content.split(" ");
+          for (var word in tweet_content){
+            if (tweet_content[word][0] == '@'){
+              tweet_content[word] = tweet_content[word].replace(":","");
+              tweet_content[word] = "<a href='https://twitter.com/"+ tweet_content[word].substring(1) + "'>"+tweet_content[word]+"</a>";
+            }
+            else if (tweet_content[word].substring(0, 4) == 'http'){
+              tweet_content[word] = "<a href='" + tweet_content[word] + "'>"+tweet_content[word]+"</a>";
+            }
+          }
+          tweets[tweet].content = tweet_content.join(" ");
+
+          var html = Mustache.to_html(template, tweets[tweet]);
+          $('#sidebar').append(html);
+        }
+      },
+  });
+
+  $('#sidebar').addClass("sidebar--active");
+};
 // Load geojson data
 google.maps.event.addDomListener(window, 'load', initialize);

@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS locals (
 
     venue VARCHAR(127) NOT NULL,
     screen_name VARCHAR(127) NOT NULL,
-    address TEXT NOT NULL,
+    address TEXT NOT NULL
 )
 """
 
@@ -145,7 +145,7 @@ def init_db():
             'DATABASE_URL', 'dbname=postgres user=JustinKan')
     elif os.environ.get('USER') == 'efrain-petercamacho':
         settings['db'] = os.environ.get(
-            'DATABASE_URL', 'dbname=postgres user=efrain-petercamacho')
+            'DATABASE_URL', 'dbname=test_wazzap user=efrain-petercamacho')
     elif os.environ.get('USER') == 'henryhowes':
         settings['db'] = os.environ.get(
             'DATABASE_URL', 'dbname=webbapp_original user=henryhowes')
@@ -225,14 +225,17 @@ def pull_tweets(target_twitter_handle, connection):
     cursor = connection.cursor()
     cursor.execute(FETCH_LOCALS_ID, (target_twitter_handle,))
     refer = cursor.fetchone()[0]
-    cursor.execute(FILTER_SAME_TWEET, refer)
-    tweet_ids = cursor.fetchall()
+
+    # Filter out tweets that are already in the database
+    # cursor.execute(FILTER_SAME_TWEET, refer)
+    # tweet_ids = cursor.fetchall()
     results = fetch_user_statuses(
         authorize(), target_twitter_handle, reference=refer)
-    edited_list = results
-    for item in edited_list:
-        if tweet_ids == item[-1]:
-            results.remove(item)
+    # edited_list = results
+    # for item in edited_list:
+    #     if tweet_ids == item[-1]:
+    #         results.remove(item)
+
     cursor.executemany(WRITE_TWEET, results)
     connection.commit()
 
@@ -280,14 +283,21 @@ def get_tweets_from_db(request):
     cursor = request.db.cursor()
     cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
     venue_info = cursor.fetchone()
-    cursor.execute(READ_TWEET, [venue_info[0]])
-    keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
-    tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
-    for tweet in tweets:
-        time_since = int((
-            datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
-        tweet['content'] = tweet['content']
-        tweet['time'] = "{} hours ago".format(time_since)
+
+    if venue_info:
+        cursor.execute(READ_TWEET, [venue_info[0]])
+        tweets = cursor.fetchall()
+
+        keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
+        tweets = [dict(zip(keys, row)) for row in tweets]
+        for tweet in tweets:
+            time_since = int((
+                datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
+            tweet['content'] = tweet['content']
+            tweet['time'] = "{} hours ago".format(time_since)
+    else:
+        tweets = [{'content': "Sorry, there don't seem to be any tweets..."}]
+
     return {'venue': venue_info[1], 'tweets': tweets}
 
 
@@ -304,7 +314,7 @@ def main():
             'DATABASE_URL', 'dbname=postgres user=JustinKan')
     elif os.environ.get('USER') == 'efrain-petercamacho':
         settings['db'] = os.environ.get(
-            'DATABASE_URL', 'dbname=postgres user=efrain-petercamacho')
+            'DATABASE_URL', 'dbname=test_wazzap user=efrain-petercamacho')
     elif os.environ.get('USER') == 'henryhowes':
         settings['db'] = os.environ.get(
             'DATABASE_URL', 'dbname=webapp_original user=henryhowes')
@@ -356,17 +366,3 @@ if __name__ == '__main__':
     app = main()
     port = os.environ.get('PORT', 8000)
     serve(app, host='127.0.0.1', port=port)
-
-    while True:
-        login = authorize()
-        time.sleep(800)
-        settings = {}
-        settings['db'] = os.environ.get(
-                         'DATABASE_URL', LOCAL_CREDENTIALS)
-        with closing(connect_db(settings)) as db:
-            handlers_list = pull_handle(db)
-            for handel in handlers_list:
-                instance = threading.Thread(target=fetch_user_statuses,
-                           args=(login, handel))
-                instance.start()
-
