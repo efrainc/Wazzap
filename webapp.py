@@ -5,6 +5,8 @@ import logging
 import json
 import datetime
 import psycopg2
+import time
+import threading
 from pyramid.config import Configurator
 from pyramid.session import SignedCookieSessionFactory
 from pyramid.view import view_config
@@ -28,7 +30,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-LOCAL_CREDENTIALS = 'dbname=postgres user=ubuntu password='
+LOCAL_CREDENTIALS = 'dbname=postgres user=postgres password=admin'
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
@@ -41,7 +43,7 @@ CREATE TABLE IF NOT EXISTS locals (
 """
 
 READ_LOCALS_ENTRY = """
-SELECT "id", "venue", "screen_name", "address", "lat", "long" FROM "locals"
+SELECT "id", "venue", "screen_name", "address" FROM "locals"
 """
 
 WRITE_LOCALS_ENTRY = """
@@ -61,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "tweets" (
     "content" TEXT NOT NULL,
     "time" TIMESTAMP NOT NULL,
     "count" INTEGER NOT NULL,
-    "status_id" INTEGER NOT NULL
+    "status_id" TEXT NOT NULL
 )
 """
 # TODO: edit tweets schema
@@ -75,7 +77,7 @@ SELECT id, venue FROM locals WHERE address = %s
 
 # {table from} {id to associate with}
 READ_TWEET = """
-SELECT id, parent_id, author_handle, content, time FROM tweets WHERE parent_id = %s ORDER BY time DESC
+SELECT id, parent_id, author_handle, content, time, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
 # {table name} {data from one tweet}
@@ -89,14 +91,9 @@ UPDATE tweets SET count = count + 1 WHERE content = %s
 """
 
 
-# INSERT_ENTRY = """
-# INSERT INTO entries (title, text, created) VALUES (%s, %s, %s)
-# """
-
-# SELECT_ENTRIES = """
-# SELECT id, title, tweet, created, venue FROM entries ORDER BY created DESC
-# """
-
+FILTER_SAME_TWEET = """
+SELECT status_id FROM tweets where parent_id = %s
+"""
 
 logging.basicConfig()
 log = logging.getLogger(__file__)
@@ -228,18 +225,17 @@ def pull_tweets(target_twitter_handle, connection):
     cursor = connection.cursor()
     cursor.execute(FETCH_LOCALS_ID, (target_twitter_handle,))
     refer = cursor.fetchone()[0]
+    cursor.execute(FILTER_SAME_TWEET, refer)
+    tweet_ids = cursor.fetchall()
     results = fetch_user_statuses(
         authorize(), target_twitter_handle, reference=refer)
+    edited_list = results
+    for item in edited_list:
+        if tweet_ids == item[-1]:
+            results.remove(item)
     cursor.executemany(WRITE_TWEET, results)
     connection.commit()
 
-
-# def write_entry(request):
-#     """write a single entry to the database"""
-#     title = request.params.get('title', None)
-#     text = request.params.get('tweet', None)
-#     created = datetime.datetime.utcnow()
-#     request.db.cursor().execute(INSERT_ENTRY, [title, text, created])
 
 @view_config(route_name='home', renderer='templates/base.jinja2')
 def geo_json(request):
@@ -261,10 +257,14 @@ def write_input_location(request):
     handle_guess = api.search_users(
         '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
     # venue, twitter, address
-    # write_local((request.params.get('venue'),
-    #             handle_guess,
-    #             request.params.get('address')),
-    #             request.db)
+
+    # Write/pull tweets regardless of correctness of twitter handle/address for now
+    # TODO: have user verification
+    write_local((request.params.get('venue'),
+                handle_guess,
+                request.params.get('address')),
+                request.db)
+    pull_tweets(handle_guess, request.db)
 
     # Pull tweets for a guessed handle associated with a location name
     # pull_tweets(handle_guess, request.db)
@@ -333,6 +333,9 @@ def main():
 DELETE_TWEETS = """
 DELETE FROM tweets
 """
+PULL_HANDLE = """
+SELECT author_handle FROM tweets
+"""
 
 
 def clear_database(connection):
@@ -340,7 +343,30 @@ def clear_database(connection):
     cursor.execute(DELETE_TWEETS)
     connection.commit()
 
+
+def pull_handle(connection):
+    cursor = connection.cursor()
+    cursor.execute(PULL_HANDLE)
+    handels = cursor.fetchall()
+    connection.commit()
+    return handels
+
+
 if __name__ == '__main__':
     app = main()
     port = os.environ.get('PORT', 8000)
     serve(app, host='127.0.0.1', port=port)
+
+    while True:
+        login = authorize()
+        time.sleep(800)
+        settings = {}
+        settings['db'] = os.environ.get(
+                         'DATABASE_URL', LOCAL_CREDENTIALS)
+        with closing(connect_db(settings)) as db:
+            handlers_list = pull_handle(db)
+            for handel in handlers_list:
+                instance = threading.Thread(target=fetch_user_statuses,
+                           args=(login, handel))
+                instance.start()
+
