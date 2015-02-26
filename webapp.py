@@ -254,7 +254,6 @@ def geo_json(request):
 @view_config(route_name='writelocation', request_method='POST', renderer='json')
 def write_input_location(request):
     # get twitter handle
-    # import pdb; pdb.set_trace()
     api = authorize()
     # Get the handle of the first-most result from twitter's user search
     handle_guess = api.search_users(

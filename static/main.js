@@ -173,28 +173,33 @@ function display_tweets(address) {
         $('#sidebar').html("");
         var venue_name = Mustache.to_html('<h2>{{venue}}</h2>', result);
         $('#sidebar').append(venue_name);
-        var template = '<div class="tweet">'+
-                          '<span class="user">{{author_handle}}</span>'+
-                          '<span class="time">{{time}}</span>'+
-                          '<p class="content">{{{content}}}'+
-                        '</div>';
+        if (result.tweets){
+          var template = '<div class="tweet">'+
+                            '<span class="user">{{author_handle}}</span>'+
+                            '<span class="time">{{time}}</span>'+
+                            '<p class="content">{{{content}}}</p>'+
+                          '</div>';
 
-        var tweets = result.tweets;
-        for(var tweet in tweets){
-          tweet_content = tweets[tweet].content.split(" ");
-          for (var word in tweet_content){
-            if (tweet_content[word][0] == '@'){
-              tweet_content[word] = tweet_content[word].replace(":","");
-              tweet_content[word] = "<a href='https://twitter.com/"+ tweet_content[word].substring(1) + "'>"+tweet_content[word]+"</a>";
+          var tweets = result.tweets;
+          for(var tweet in tweets){
+            tweet_content = tweets[tweet].content.split(" ");
+            for (var word in tweet_content){
+              if (tweet_content[word][0] == '@'){
+                tweet_content[word] = tweet_content[word].replace(":","");
+                tweet_content[word] = "<a href='https://twitter.com/"+ tweet_content[word].substring(1) + "'>"+tweet_content[word]+"</a>";
+              }
+              else if (tweet_content[word].substring(0, 4) == 'http'){
+                tweet_content[word] = "<a href='" + tweet_content[word] + "'>"+tweet_content[word]+"</a>";
+              }
             }
-            else if (tweet_content[word].substring(0, 4) == 'http'){
-              tweet_content[word] = "<a href='" + tweet_content[word] + "'>"+tweet_content[word]+"</a>";
-            }
+            tweets[tweet].content = tweet_content.join(" ");
+
+            var html = Mustache.to_html(template, tweets[tweet]);
+
+            $('#sidebar').append(html);
           }
-          tweets[tweet].content = tweet_content.join(" ");
-
-          var html = Mustache.to_html(template, tweets[tweet]);
-          $('#sidebar').append(html);
+        else {
+          $('#sidebar').append('<p class="errorMessage">Sorry, no tweets were found...</p>');
         }
       },
   });
