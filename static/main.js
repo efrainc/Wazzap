@@ -86,14 +86,6 @@ function initialize() {
 google.maps.event.addListener(searchBox, 'places_changed', function() {
   var places = searchBox.getPlaces();
 
-  // var geojson = JSON.parse(places);
-  // map.data.addGeoJson(places);
-  // var featurized = Data.Feature(places[0]);
-  // map.data.add(places[0].geometry);
-  var feature = map.data.add(places[0].geometry);
-  map.data.setMap(map);
-
-
   $.ajax({
       url: '/writelocation',
       type: 'POST',

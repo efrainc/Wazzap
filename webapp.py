@@ -77,7 +77,7 @@ SELECT id, venue FROM locals WHERE address = %s
 
 # {table from} {id to associate with}
 READ_TWEET = """
-SELECT id, parent_id, author_handle, content, time, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
+SELECT id, parent_id, author_handle, content, time, count, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
 # {table name} {data from one tweet}
