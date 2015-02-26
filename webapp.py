@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS locals (
 
     venue VARCHAR(127) NOT NULL,
     screen_name VARCHAR(127) NOT NULL,
-    address TEXT NOT NULL,
+    address TEXT NOT NULL
 )
 """
 
