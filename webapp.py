@@ -58,7 +58,7 @@ DB_TWEETS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS "tweets" (
     "id" serial PRIMARY KEY,
 
-    "parent_id" INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE NO ACTION,
+    "parent_id" INTEGER REFERENCES locals ON UPDATE NO ACTION ON DELETE CASCADE,
     "author_handle" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "time" TIMESTAMP NOT NULL,
