@@ -17,17 +17,17 @@ function initialize() {
     fillColor: 'green'
   });
 
-  // Create icons
-  // var iconURL = 'https://s3-us-west-2.amazonaws.com/wassap/hifi.png';
-  // var iconSize = new google.maps.Size(34 ,34);
-  // var iconOrigin = new google.maps.Point(0,0);
-  // var iconAnchor = new google.maps.Point(10,34);
-  // var myIcon = {
-  //   url: iconURL,
-  //   size: iconSize, 
-  //   origin: iconOrigin,
-  //   anchor: iconAnchor
-  // };
+  //Create icons
+  var iconURL = 'https://s3-us-west-2.amazonaws.com/wassap/hifi.png';
+  var iconSize = new google.maps.Size(34 ,34);
+  var iconOrigin = new google.maps.Point(0,0);
+  var iconAnchor = new google.maps.Point(10,34);
+  var myIcon = {
+    url: iconURL,
+    size: iconSize, 
+    origin: iconOrigin,
+    anchor: iconAnchor
+  };
 
 
   // Create a marker for each place using icons
@@ -84,53 +84,37 @@ function initialize() {
   // Listen for the event fired when the user selects an item from the
   // pick list. Retrieve the matching places for that item.
   google.maps.event.addListener(searchBox, 'places_changed', function() {
-  var places = searchBox.getPlaces();
+    var places = searchBox.getPlaces();
 
-  $.ajax({
-              url: '/writelocation',
-              type: 'POST',
-              dataType: 'json',
-              data: {'venue': places[0].name,'address': places[0].formatted_address.slice(0, -15)},
-              success: function(result){
-                // get lat long from address
-                // create a new pin
-              }
-            })
+    $.ajax({
+          url: '/writelocation',
+          type: 'POST',
+          dataType: 'json',
+          data: {'venue': places[0].name,'address': places[0].formatted_address.slice(0, -15)},
+          success: function(result){
+            // get lat long from address
+            // create a new pin
+          }
+        })
 
+    // Create a marker for each place.
+    var marker = new google.maps.Marker({
+      map: map,
+      icon: myIcon,
+      title: places[0].name,
+      position: places[0].geometry.location,
+      address: places[0].formatted_address.slice(0, -15)
+    });
+    google.maps.event.addListener(marker, 'click', function() {
+      display_tweets(marker.address);
+    });
 
-  // Create a marker for each place.
-  var marker = new google.maps.Marker({
-    map: map,
-    icon: myIcon,
-    title: places[0].name,
-    position: places[0].geometry.location,
-    address: places[0].formatted_address.slice(0, -15)
-  });
-  google.maps.event.addListener(marker, 'click', function() {
-    display_tweets(marker.address);
-  });
-
-  // bounds.extend(place.geometry.location);
-  map.panTo(places[0].geometry.location);
+    // bounds.extend(place.geometry.location);
+    map.panTo(places[0].geometry.location);
 
   // map.fitBounds(bounds);
   });
 
-
-  $.ajax({
-      url: '/writelocation',
-      type: 'POST',
-      dataType: 'json',
-      data: {'venue': places[0].name,'address': places[0].formatted_address},
-      success: function(result){
-        // get lat long from address
-        // create a new pin
-      }
-    })
-
-  map.panTo(places[0].geometry.location);
-
-  });
   // if (places.length == 0) {
   // return;
   // }
