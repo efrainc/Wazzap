@@ -12,8 +12,9 @@ function initialize() {
   //    zoom: 13
   };
 
-  var iconURL = 'https://maps.google.com/mapfiles/kml/shapes/info-i_maps.png';
-  var iconSize = new google.maps.Size(20,34);
+  // Create icons
+  var iconURL = 'https://s3-us-west-2.amazonaws.com/wassap/hifi.png';
+  var iconSize = new google.maps.Size(34 ,34);
   var iconOrigin = new google.maps.Point(0,0);
   var iconAnchor = new google.maps.Point(10,34);
   var myIcon = {
@@ -27,8 +28,12 @@ function initialize() {
 
   map.data.loadGeoJson("/static/venue.json");
 
-       
-  // Create a marker for each place.
+  map.data.setStyle({
+    icon: '//s3-us-west-2.amazonaws.com/wassap/hifi.png',
+    fillColor: 'green'
+  });
+
+  // Create a marker for each place using icons
   var marker = new google.maps.Marker({
     map: map,
     icon: myIcon,
@@ -54,7 +59,7 @@ function initialize() {
       featureType: "road",
       elementType: "geometry",
       stylers: [
-        { lightness: 100 },
+        { lightness: 0 },
         { visibility: "simplified" }
       ]
     },{
