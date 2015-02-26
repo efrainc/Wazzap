@@ -90,7 +90,3 @@ def test_write_local(settings):
     query = cursor.execute("SELECT * FROM locals")
     print query
     assert True
-
-
-
-
