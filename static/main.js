@@ -29,7 +29,8 @@ function initialize() {
   map.data.loadGeoJson("/static/venue.json");
 
   map.data.setStyle({
-    icon: '//s3-us-west-2.amazonaws.com/wassap/hifi.png',
+    icon: '/static/hifi.png',
+    //icon: '//s3-us-west-2.amazonaws.com/wassap/hifi.png',
     fillColor: 'green'
   });
 
