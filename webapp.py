@@ -17,6 +17,7 @@ from geopy.geocoders import Nominatim
 
 from tweepy_inter import authorize
 from tweepy_inter import fetch_user_statuses
+from write_json import add_venue
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -77,12 +78,12 @@ SELECT id, venue FROM locals WHERE address = %s
 
 # {table from} {id to associate with}
 READ_TWEET = """
-SELECT id, parent_id, author_handle, content, time, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
+SELECT id, parent_id, author_handle, content, time, count, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
 # {table name} {data from one tweet}
 WRITE_TWEET = """
-INSERT INTO tweets (parent_id, author_handle, content, time, count, status_id) VALUES(%s, %s, %s, %s, %s, %s)
+INSERT INTO tweets (parent_id, author_handle, content, time, count, status_id) VALUES (%s, %s, %s, %s, %s, %s)
 """
 
 # {table name} {content to match}
@@ -145,7 +146,7 @@ def init_db():
             'DATABASE_URL', 'dbname=postgres user=JustinKan')
     elif os.environ.get('USER') == 'efrain-petercamacho':
         settings['db'] = os.environ.get(
-            'DATABASE_URL', 'dbname=postgres user=efrain-petercamacho')
+            'DATABASE_URL', 'dbname=test_wazzap user=efrain-petercamacho')
     elif os.environ.get('USER') == 'henryhowes':
         settings['db'] = os.environ.get(
             'DATABASE_URL', 'dbname=webbapp_original user=henryhowes')
@@ -225,50 +226,54 @@ def pull_tweets(target_twitter_handle, connection):
     cursor = connection.cursor()
     cursor.execute(FETCH_LOCALS_ID, (target_twitter_handle,))
     refer = cursor.fetchone()[0]
-    cursor.execute(FILTER_SAME_TWEET, refer)
-    tweet_ids = cursor.fetchall()
+    import pdb; pdb.set_trace()
+
+    # Filter out tweets that are already in the database
+    # cursor.execute(FILTER_SAME_TWEET, refer)
+    # tweet_ids = cursor.fetchall()
     results = fetch_user_statuses(
         authorize(), target_twitter_handle, reference=refer)
-    edited_list = results
-    for item in edited_list:
-        if tweet_ids == item[-1]:
-            results.remove(item)
+    # edited_list = results
+    # for item in edited_list:
+    #     if tweet_ids == item[-1]:
+    #         results.remove(item)
+
     cursor.executemany(WRITE_TWEET, results)
     connection.commit()
 
 
 @view_config(route_name='home', renderer='templates/base.jinja2')
 def geo_json(request):
-    """return a list of all entries as dicts"""
-    cursor = request.db.cursor()
-    cursor.execute(READ_TWEET, (1,))  # TODO: retrieving table id for a venue
+    """renders home page"""
 
-    keys = ('id', 'parent_id', 'author_handle', 'content', 'time')
-    entries = [dict(zip(keys, row)) for row in cursor.fetchall()]
-    return {'entries': entries}
+    return {}
 
 
 @view_config(route_name='writelocation', request_method='POST', renderer='json')
 def write_input_location(request):
     # get twitter handle
-    # import pdb; pdb.set_trace()
     api = authorize()
+    import pdb; pdb.set_trace()
     # Get the handle of the first-most result from twitter's user search
-    handle_guess = api.search_users(
-        '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
-    # venue, twitter, address
+    try:
+        handle_guess = api.search_users(
+            '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
+        pull_tweets(handle_guess, request.db)
+    except IndexError:
+        handle_guess = ''
 
     # Write/pull tweets regardless of correctness of twitter handle/address for now
     # TODO: have user verification
-    write_local((request.params.get('venue'),
-                handle_guess,
-                request.params.get('address')),
-                request.db)
-    pull_tweets(handle_guess, request.db)
+    cursor = request.db.cursor()
+    cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
+    if not cursor.fetchone():
+        write_local((request.params.get('venue'),
+                    handle_guess,
+                    request.params.get('address')),
+                    request.db)
+        add_venue(request.params.get('address'))
+        pull_tweets(handle_guess, request.db)
 
-    # Pull tweets for a guessed handle associated with a location name
-    # pull_tweets(handle_guess, request.db)
-    # Place pin on map?
 
     return {'venue_guess': request.params.get('venue'),
             'handle_guess': handle_guess,
@@ -281,13 +286,19 @@ def get_tweets_from_db(request):
     cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
     venue_info = cursor.fetchone()
     cursor.execute(READ_TWEET, [venue_info[0]])
-    keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
-    tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
-    for tweet in tweets:
-        time_since = int((
-            datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
-        tweet['content'] = tweet['content']
-        tweet['time'] = "{} hours ago".format(time_since)
+    tweets = cursor.fetchall()
+
+    if tweets:
+        keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
+        tweets = [dict(zip(keys, row)) for row in tweets]
+        for tweet in tweets:
+            time_since = int((
+                datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
+            tweet['content'] = tweet['content']
+            tweet['time'] = "{} hours ago".format(time_since)
+    else:
+        tweets = None
+
     return {'venue': venue_info[1], 'tweets': tweets}
 
 
@@ -304,7 +315,7 @@ def main():
             'DATABASE_URL', 'dbname=postgres user=JustinKan')
     elif os.environ.get('USER') == 'efrain-petercamacho':
         settings['db'] = os.environ.get(
-            'DATABASE_URL', 'dbname=postgres user=efrain-petercamacho')
+            'DATABASE_URL', 'dbname=test_wazzap user=efrain-petercamacho')
     elif os.environ.get('USER') == 'henryhowes':
         settings['db'] = os.environ.get(
             'DATABASE_URL', 'dbname=webapp_original user=henryhowes')
@@ -356,17 +367,3 @@ if __name__ == '__main__':
     app = main()
     port = os.environ.get('PORT', 8000)
     serve(app, host='127.0.0.1', port=port)
-
-    while True:
-        login = authorize()
-        time.sleep(800)
-        settings = {}
-        settings['db'] = os.environ.get(
-                         'DATABASE_URL', LOCAL_CREDENTIALS)
-        with closing(connect_db(settings)) as db:
-            handlers_list = pull_handle(db)
-            for handel in handlers_list:
-                instance = threading.Thread(target=fetch_user_statuses,
-                           args=(login, handel))
-                instance.start()
-
