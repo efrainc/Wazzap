@@ -1,11 +1,17 @@
 #! /usr/bin/env python
 import pyramid
 import pytest
+import httplib
+import urllib
 import os
 from pyramid import testing
 import psycopg2
 from contextlib import closing
 from webapp import DB_LOCALS_SCHEMA, DB_TWEETS_SCHEMA
+from webapp import pull_tweets, WRITE_TWEET
+from tweepy_inter import authorize
+from tweepy_inter import fetch_user_statuses
+
 
 TEST_DSN = 'dbname=test_wazzap user=efrain-petercamacho'
 dbname = "dbname=test_wazzap user=efrain-petercamacho"
@@ -74,6 +80,25 @@ def read_db():
         conn.commit()
     return results
 
+
+def pull_tweets(target_twitter_handle):
+    with closing(connect_db()) as conn:
+        cursor = conn.cursor()
+        results = fetch_user_statuses(
+            authorize(), target_twitter_handle)
+        print results
+        cursor.executemany(WRITE_TWEET, results)
+        conn.commit()
+
+
+def read_db_tweets():
+    with closing(connect_db()) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM tweets")
+        results = cursor.fetchall()
+        conn.commit()
+    return results
+
 ########################
 # TESTING
 ########################
@@ -101,3 +126,18 @@ def test_write_local():
     query = read_db()
     print "This is the query: {} ".format(query)
     assert query == expected_output
+
+
+def test_website_connetion():
+   """Tests to see if we are on the homepage"""
+   conn = httplib.HTTPConnection('ec2-52-10-224-242.us-west-2.compute.amazonaws.com')
+   conn.request("HEAD", '')
+   assert conn.getresponse().status == 200
+
+
+def test_write_tweet():
+    """Test that pulled tweets are written to the database"""
+    # pull_tweets('HenryMGrantham')
+    tweets = read_db_tweets()
+    assert '562880888909099008' in tweets[-1]
+
