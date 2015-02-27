@@ -195,7 +195,7 @@ function display_tweets(address) {
       data: {'address': address},
       success: function(result){
         $('#sidebar').html("");
-        var venue_name = Mustache.to_html('<h2>{{venue}}</h2>', result);
+        var venue_name = Mustache.to_html('<h2><a class="venue_name" href="https://twitter.com/{{venue_handle}}">{{venue}}</a></h2>', result);
         $('#sidebar').append(venue_name);
         if (result.tweets){
           var template = '<div class="tweet">'+

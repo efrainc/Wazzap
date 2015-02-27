@@ -39,6 +39,10 @@ h1, ul {margin: 0; font-size: 5.7em;}
   text-align: center;
 }
 
+.venue_name {
+  color: white;
+}
+
 .tweet {
   padding: 10px 10px 10px 10px;
   background-color: white;
