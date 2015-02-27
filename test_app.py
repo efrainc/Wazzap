@@ -129,15 +129,26 @@ def test_write_local():
 
 
 def test_website_connetion():
-   """Tests to see if we are on the homepage"""
-   conn = httplib.HTTPConnection('ec2-52-10-224-242.us-west-2.compute.amazonaws.com')
-   conn.request("HEAD", '')
-   assert conn.getresponse().status == 200
+    """Tests to see if we are on the homepage"""
+    conn = httplib.HTTPConnection('ec2-52-10-224-242.us-west-2.compute.amazonaws.com')
+    conn.request("HEAD", '')
+    assert conn.getresponse().status == 200
 
 
 def test_write_tweet():
     """Test that pulled tweets are written to the database"""
     # pull_tweets('HenryMGrantham')
+    # Uncomment when testing this
+    # fucntion only. Else, consumes tweepy quota
     tweets = read_db_tweets()
     assert '562880888909099008' in tweets[-1]
+
+
+def test_delete_tweet():
+    """Test deletting from the database"""
+    #Work for Future Development
+    assert True
+
+
+
 
