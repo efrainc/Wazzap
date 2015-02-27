@@ -7,7 +7,7 @@ import psycopg2
 from contextlib import closing
 from webapp import DB_LOCALS_SCHEMA, DB_TWEETS_SCHEMA
 
-TEST_DSN = 'dbname=test_wazzap user=efrain-petercamacho'
+TEST_DSN = 'dbname=test_wazzap user=JustinKan'
 
 
 WRITE_LOCALS_ENTRY = """
@@ -76,9 +76,9 @@ def test_listing(app):
     virtual machine"""
     response = app.get('/')
     assert response.status_code == 200
-
-
-    test = connect_db(settings)
+    if os.environ.get('USER') == 'ubuntu':
+        import secrets
+    test = connect_db(secrets.dbase_connection())
     print test
 
 def test_write_local(settings):
