@@ -156,12 +156,25 @@ function initialize() {
   searchBox.setBounds(bounds);
   });
 
-
+  var current = false;
   map.data.addListener('click', function(event) {
     var address = event.feature["k"]["address"].slice(0, -5);
-      display_tweets(address)
-  });
-}
+    display_tweets(address);
+    
+    if (current["displayed"] !== undefined && event.feature != current){
+        current["displayed"] = undefined;
+    };
+    current = event.feature;
+
+    
+    if (event.feature["displayed"] == undefined){
+        event.feature["displayed"] = display_tweets(address);
+    }
+    else{
+        $('#sidebar').removeClass("sidebar--active");
+        event.feature["displayed"] = undefined;
+  }
+});
 
 function display_tweets(address) {
   $.ajax({
@@ -203,8 +216,9 @@ function display_tweets(address) {
         }
       },
   });
-
   $('#sidebar').addClass("sidebar--active");
+  return true;
+  };
 };
 // Load geojson data
 google.maps.event.addDomListener(window, 'load', initialize);
