@@ -31,7 +31,6 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-#LOCAL_CREDENTIALS = 'dbname=webapp_original user=henryhowes password=admin'
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
