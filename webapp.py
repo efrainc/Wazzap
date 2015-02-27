@@ -226,6 +226,7 @@ def pull_tweets(target_twitter_handle, connection):
     cursor = connection.cursor()
     cursor.execute(FETCH_LOCALS_ID, (target_twitter_handle,))
     refer = cursor.fetchone()[0]
+    import pdb; pdb.set_trace()
 
     # Filter out tweets that are already in the database
     # cursor.execute(FILTER_SAME_TWEET, refer)
@@ -257,9 +258,14 @@ def write_input_location(request):
     # get twitter handle
     # import pdb; pdb.set_trace()
     api = authorize()
+    import pdb; pdb.set_trace()
     # Get the handle of the first-most result from twitter's user search
-    handle_guess = api.search_users(
-        '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
+    try:
+        handle_guess = api.search_users(
+            '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
+        pull_tweets(handle_guess, request.db)
+    except IndexError:
+        handle_guess = ''
     # venue, twitter, address
 
     # Write/pull tweets regardless of correctness of twitter handle/address for now
@@ -269,7 +275,7 @@ def write_input_location(request):
                 request.params.get('address')),
                 request.db)
     add_venue(request.params.get('address'))
-    pull_tweets(handle_guess, request.db)
+
 
     # Pull tweets for a guessed handle associated with a location name
     # pull_tweets(handle_guess, request.db)
