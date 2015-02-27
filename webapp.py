@@ -13,7 +13,6 @@ from pyramid.view import view_config
 from pyramid.events import NewRequest, subscriber
 from waitress import serve
 from contextlib import closing
-from geopy.geocoders import Nominatim
 
 from tweepy_inter import authorize
 from tweepy_inter import fetch_user_statuses
@@ -31,7 +30,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-LOCAL_CREDENTIALS = 'dbname=postgres user=postgres password=admin'
+LOCAL_CREDENTIALS = 'dbname=webapp_original user=henryhowes password=admin'
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
@@ -255,8 +254,9 @@ def write_input_location(request):
     # Get the handle of the first-most result from twitter's user search
     try:
         handle_guess = api.search_users(
-            '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
-        pull_tweets(handle_guess, request.db)
+            '{}, {}'.format(
+                request.params.get('venue'), 'Seattle'))[0].screen_name
+        # pull_tweets(handle_guess, request.db)
     except IndexError:
         handle_guess = ''
 
@@ -270,8 +270,8 @@ def write_input_location(request):
                     request.params.get('address')),
                     request.db)
         add_venue(request.params.get('address'))
-        pull_tweets(handle_guess, request.db)
-
+        if handle_guess:
+            pull_tweets(handle_guess, request.db)
 
     return {'venue_guess': request.params.get('venue'),
             'handle_guess': handle_guess,
@@ -287,13 +287,20 @@ def get_tweets_from_db(request):
     tweets = cursor.fetchall()
 
     if tweets:
-        keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
+        keys = ('id', 'parent_id', 'author_handle',
+                'content', 'time', 'count', 'status_id')
         tweets = [dict(zip(keys, row)) for row in tweets]
         for tweet in tweets:
             time_since = int((
                 datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
-            tweet['content'] = tweet['content']
-            tweet['time'] = "{} hours ago".format(time_since)
+            if time_since > 23:
+                time_since = int(time_since // 24)
+                if time_since == 1:
+                    tweet['time'] = "{} day ago".format(time_since)
+                else:
+                    tweet['time'] = "{} days ago".format(time_since)
+            else:
+                tweet['time'] = "{} hours ago".format(time_since)
     else:
         tweets = None
 

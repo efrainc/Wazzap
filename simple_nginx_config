@@ -1,6 +1,6 @@
 server {
    listen 80;
-   server_name http://ec2-52-11-23-111.us-west-2.compute.amazonaws.com/;
+   server_name http://ec2-52-10-224-242.us-west-2.compute.amazonaws.com/;
    access_log  /var/log/nginx/test.log;
 
    location / {
