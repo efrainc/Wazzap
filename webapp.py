@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS "tweets" (
 # TODO: update tweepy_inter.fetch_user_statuses() to match
 
 GET_VENUE_INFO = """
-SELECT id, venue FROM locals WHERE address = %s
+SELECT id, venue, author_handle FROM locals WHERE address = %s
 """
 
 # {table from} {id to associate with}
@@ -288,7 +288,7 @@ def get_tweets_from_db(request):
     else:
         tweets = None
 
-    return {'venue': venue_info[1], 'tweets': tweets}
+    return {'venue': venue_info[1], 'tweets': tweets, 'venue_handle': venue_info[2]}
 
 
 def main():
