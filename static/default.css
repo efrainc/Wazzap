@@ -25,6 +25,8 @@ h1, ul {margin: 0; font-size: 5em;}
   transition: all 1s ease-out;
   border-radius: 20px;
   padding: 0 10px 0 10px;
+  font-family: 'Open Sans', sans-serif;
+  /*font-family: 'Bangers', cursive;*/
 }
 
 
