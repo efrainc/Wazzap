@@ -17,6 +17,7 @@ from geopy.geocoders import Nominatim
 
 from tweepy_inter import authorize
 from tweepy_inter import fetch_user_statuses
+from write_json import add_venue
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -77,7 +78,7 @@ SELECT id, venue FROM locals WHERE address = %s
 
 # {table from} {id to associate with}
 READ_TWEET = """
-SELECT id, parent_id, author_handle, content, time, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
+SELECT id, parent_id, author_handle, content, time, count, status_id FROM tweets WHERE parent_id = %s ORDER BY time DESC
 """
 
 # {table name} {data from one tweet}
@@ -225,14 +226,18 @@ def pull_tweets(target_twitter_handle, connection):
     cursor = connection.cursor()
     cursor.execute(FETCH_LOCALS_ID, (target_twitter_handle,))
     refer = cursor.fetchone()[0]
-    cursor.execute(FILTER_SAME_TWEET, refer)
-    tweet_ids = cursor.fetchall()
+    import pdb; pdb.set_trace()
+
+    # Filter out tweets that are already in the database
+    # cursor.execute(FILTER_SAME_TWEET, refer)
+    # tweet_ids = cursor.fetchall()
     results = fetch_user_statuses(
         authorize(), target_twitter_handle, reference=refer)
-    edited_list = results
-    for item in edited_list:
-        if tweet_ids == item[-1]:
-            results.remove(item)
+    # edited_list = results
+    # for item in edited_list:
+    #     if tweet_ids == item[-1]:
+    #         results.remove(item)
+
     cursor.executemany(WRITE_TWEET, results)
     connection.commit()
 
@@ -253,9 +258,14 @@ def write_input_location(request):
     # get twitter handle
     # import pdb; pdb.set_trace()
     api = authorize()
+    import pdb; pdb.set_trace()
     # Get the handle of the first-most result from twitter's user search
-    handle_guess = api.search_users(
-        '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
+    try:
+        handle_guess = api.search_users(
+            '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
+        pull_tweets(handle_guess, request.db)
+    except IndexError:
+        handle_guess = ''
     # venue, twitter, address
 
     # Write/pull tweets regardless of correctness of twitter handle/address for now
@@ -264,7 +274,8 @@ def write_input_location(request):
                 handle_guess,
                 request.params.get('address')),
                 request.db)
-    pull_tweets(handle_guess, request.db)
+    add_venue(request.params.get('address'))
+
 
     # Pull tweets for a guessed handle associated with a location name
     # pull_tweets(handle_guess, request.db)
@@ -281,13 +292,19 @@ def get_tweets_from_db(request):
     cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
     venue_info = cursor.fetchone()
     cursor.execute(READ_TWEET, [venue_info[0]])
-    keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
-    tweets = [dict(zip(keys, row)) for row in cursor.fetchall()]
-    for tweet in tweets:
-        time_since = int((
-            datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
-        tweet['content'] = tweet['content']
-        tweet['time'] = "{} hours ago".format(time_since)
+    tweets = cursor.fetchall()
+
+    if tweets:
+        keys = ('id', 'parent_id', 'author_handle', 'content', 'time', 'count', 'status_id')
+        tweets = [dict(zip(keys, row)) for row in tweets]
+        for tweet in tweets:
+            time_since = int((
+                datetime.datetime.utcnow() - tweet['time']).total_seconds() // 3600)
+            tweet['content'] = tweet['content']
+            tweet['time'] = "{} hours ago".format(time_since)
+    else:
+        tweets = None
+
     return {'venue': venue_info[1], 'tweets': tweets}
 
 

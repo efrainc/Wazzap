@@ -2,6 +2,17 @@ import json
 from geopy.geocoders import Nominatim
 import geocoder
 
+
+def add_venue(address):
+    geocoded = geocoder.google(address)
+    geojson = geocoded.geojson
+    with open('static/venue.json', 'r') as outfile:
+        content = json.loads(outfile.read())
+        content['features'].append(geojson)
+
+    with open('static/venue.json', 'w') as outfile:
+        json.dump(content, outfile)
+
 if __name__ == "__main__":
 
     venues = ["305 Harrison Street, Seattle, WA 98109",

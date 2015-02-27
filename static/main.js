@@ -17,17 +17,17 @@ function initialize() {
     fillColor: 'green'
   });
 
-  // Create icons
-  // var iconURL = 'https://s3-us-west-2.amazonaws.com/wassap/hifi.png';
-  // var iconSize = new google.maps.Size(34 ,34);
-  // var iconOrigin = new google.maps.Point(0,0);
-  // var iconAnchor = new google.maps.Point(10,34);
-  // var myIcon = {
-  //   url: iconURL,
-  //   size: iconSize, 
-  //   origin: iconOrigin,
-  //   anchor: iconAnchor
-  // };
+  //Create icons
+  var iconURL = 'https://s3-us-west-2.amazonaws.com/wassap/hifi.png';
+  var iconSize = new google.maps.Size(34 ,34);
+  var iconOrigin = new google.maps.Point(0,0);
+  var iconAnchor = new google.maps.Point(10,34);
+  var myIcon = {
+    url: iconURL,
+    size: iconSize, 
+    origin: iconOrigin,
+    anchor: iconAnchor
+  };
 
 
   // Create a marker for each place using icons
@@ -81,33 +81,40 @@ function initialize() {
 
   var searchBox = new google.maps.places.SearchBox((input));
 
-// Listen for the event fired when the user selects an item from the
-// pick list. Retrieve the matching places for that item.
-google.maps.event.addListener(searchBox, 'places_changed', function() {
-  var places = searchBox.getPlaces();
+  // Listen for the event fired when the user selects an item from the
+  // pick list. Retrieve the matching places for that item.
+  google.maps.event.addListener(searchBox, 'places_changed', function() {
+    var places = searchBox.getPlaces();
 
-  // var geojson = JSON.parse(places);
-  // map.data.addGeoJson(places);
-  // var featurized = Data.Feature(places[0]);
-  // map.data.add(places[0].geometry);
-  var feature = map.data.add(places[0].geometry);
-  map.data.setMap(map);
+    $.ajax({
+          url: '/writelocation',
+          type: 'POST',
+          dataType: 'json',
+          data: {'venue': places[0].name,'address': places[0].formatted_address.slice(0, -15)},
+          success: function(result){
+            // get lat long from address
+            // create a new pin
+          }
+        })
 
+    // Create a marker for each place.
+    var marker = new google.maps.Marker({
+      map: map,
+      icon: myIcon,
+      title: places[0].name,
+      position: places[0].geometry.location,
+      address: places[0].formatted_address.slice(0, -15)
+    });
+    google.maps.event.addListener(marker, 'click', function() {
+      display_tweets(marker.address);
+    });
 
-  $.ajax({
-      url: '/writelocation',
-      type: 'POST',
-      dataType: 'json',
-      data: {'venue': places[0].name,'address': places[0].formatted_address},
-      success: function(result){
-        // get lat long from address
-        // create a new pin
-      }
-    })
+    // bounds.extend(place.geometry.location);
+    map.panTo(places[0].geometry.location);
 
-  map.panTo(places[0].geometry.location);
-
+  // map.fitBounds(bounds);
   });
+
   // if (places.length == 0) {
   // return;
   // }
@@ -152,44 +159,47 @@ google.maps.event.addListener(searchBox, 'places_changed', function() {
 
   map.data.addListener('click', function(event) {
     var address = event.feature["k"]["address"].slice(0, -5);
-
-    $.ajax({
-        url: '/gettweets',
-        type: 'GET',
-        dataType: 'json',
-        data: {'address': address},
-        success: function(result){
-          $('#sidebar').html("");
-          var venue_name = Mustache.to_html('<h2>{{venue}}</h2>', result);
-          $('#sidebar').append(venue_name);
-          var template = '<div class="tweet">'+
-                            '<span class="user">{{author_handle}}</span>'+
-                            '<span class="time">{{time}}</span>'+
-                            '<p class="content">{{{content}}}'+
-                          '</div>';
-
-          var tweets = result.tweets;
-          for(var tweet in tweets){
-            tweet_content = tweets[tweet].content.split(" ");
-            for (var word in tweet_content){
-              if (tweet_content[word][0] == '@'){
-                tweet_content[word] = tweet_content[word].replace(":","");
-                tweet_content[word] = "<a href='https://twitter.com/"+ tweet_content[word].substring(1) + "'>"+tweet_content[word]+"</a>";
-              }
-              else if (tweet_content[word].substring(0, 4) == 'http'){
-                tweet_content[word] = "<a href='" + tweet_content[word] + "'>"+tweet_content[word]+"</a>";
-              }
-            }
-            tweets[tweet].content = tweet_content.join(" ");
-
-            var html = Mustache.to_html(template, tweets[tweet]);
-            $('#sidebar').append(html);
-          }
-        },
-    });
-
-    $('#sidebar').addClass("sidebar--active");
+      display_tweets(address)
   });
 }
+
+function display_tweets(address) {
+  $.ajax({
+      url: '/gettweets',
+      type: 'GET',
+      dataType: 'json',
+      data: {'address': address},
+      success: function(result){
+        $('#sidebar').html("");
+        var venue_name = Mustache.to_html('<h2>{{venue}}</h2>', result);
+        $('#sidebar').append(venue_name);
+        var template = '<div class="tweet">'+
+                          '<span class="user">{{author_handle}}</span>'+
+                          '<span class="time">{{time}}</span>'+
+                          '<p class="content">{{{content}}}'+
+                        '</div>';
+
+        var tweets = result.tweets;
+        for(var tweet in tweets){
+          tweet_content = tweets[tweet].content.split(" ");
+          for (var word in tweet_content){
+            if (tweet_content[word][0] == '@'){
+              tweet_content[word] = tweet_content[word].replace(":","");
+              tweet_content[word] = "<a href='https://twitter.com/"+ tweet_content[word].substring(1) + "'>"+tweet_content[word]+"</a>";
+            }
+            else if (tweet_content[word].substring(0, 4) == 'http'){
+              tweet_content[word] = "<a href='" + tweet_content[word] + "'>"+tweet_content[word]+"</a>";
+            }
+          }
+          tweets[tweet].content = tweet_content.join(" ");
+
+          var html = Mustache.to_html(template, tweets[tweet]);
+          $('#sidebar').append(html);
+        }
+      },
+  });
+
+  $('#sidebar').addClass("sidebar--active");
+};
 // Load geojson data
 google.maps.event.addDomListener(window, 'load', initialize);
