@@ -3,6 +3,11 @@ from geopy.geocoders import Nominatim
 import geocoder
 
 
+def delete_venues():
+    with open('static/venue.json', 'w') as venues:
+        venues.write('')
+
+
 def add_venue(address):
     geocoded = geocoder.google(address)
     geojson = geocoded.geojson
