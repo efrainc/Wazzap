@@ -24,8 +24,7 @@ pyasn1-modules==0.0.5
 pycrypto==2.6.1
 pygeocoder==1.2.5
 pyramid==1.5.3
-pyramid-jinja2==2.3.3
-pytest==2.6.4
+pyramid-jinja2==2.3.3pytest==2.6.4
 ratelim==0.1.5
 repoze.lru==0.6
 requests==2.5.3
