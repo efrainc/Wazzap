@@ -83,7 +83,7 @@ SELECT id, parent_id, author_handle, content, time, count, status_id FROM tweets
 
 # {table name} {data from one tweet}
 WRITE_TWEET = """
-INSERT INTO tweets (parent_id, author_handle, content, time, count, status_id) VALUES(%s, %s, %s, %s, %s, %s)
+INSERT INTO tweets (parent_id, author_handle, content, time, count, status_id) VALUES (%s, %s, %s, %s, %s, %s)
 """
 
 # {table name} {content to match}
