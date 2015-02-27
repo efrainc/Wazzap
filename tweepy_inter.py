@@ -3,6 +3,7 @@ import threading
 import psycopg2
 import re
 import parsedatetime
+import secrets
 
 
 def authorize():
@@ -10,12 +11,12 @@ def authorize():
     Use OAuth to setup access token for the app.
     """
     auth = tweepy.OAuthHandler(
-        'Xm4gPHD64LuLKJNam2aRbJhi9',
-        'rZsFYrxsGfiq4TAQ2yKbtUBKeRhI7QnMLUxFGf0pI35DrZKDLH'
+        secrets.tweepy_consumer_key,
+        secrets.tweepy_consumer_secret
     )
     auth.set_access_token(
-        '2489534185-wWhkpgFhDEodaaE73bL34JW9dlwG3ZtktQJA8xf',
-        '5OewpVBuhQmyoh31EI4zOz2YJuFmycqPL1GiCGVlCDp4C'
+        secrets.access_token,
+        secrets.access_secret
     )
 
     return tweepy.API(auth)
