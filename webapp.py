@@ -31,7 +31,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 # )
 # """
 
-LOCAL_CREDENTIALS = 'dbname=postgres user=postgres password=admin'
+LOCAL_CREDENTIALS = 'dbname=webapp_original user=henryhowes password=admin'
 
 DB_LOCALS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS locals (
@@ -256,7 +256,7 @@ def write_input_location(request):
     try:
         handle_guess = api.search_users(
             '{}, {}'.format(request.params.get('venue'), 'Seattle'))[0].screen_name
-        pull_tweets(handle_guess, request.db)
+        # pull_tweets(handle_guess, request.db)
     except IndexError:
         handle_guess = ''
 
@@ -270,7 +270,8 @@ def write_input_location(request):
                     request.params.get('address')),
                     request.db)
         add_venue(request.params.get('address'))
-        pull_tweets(handle_guess, request.db)
+        if handle_guess:
+            pull_tweets(handle_guess, request.db)
 
 
     return {'venue_guess': request.params.get('venue'),

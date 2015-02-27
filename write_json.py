@@ -7,10 +7,14 @@ def add_venue(address):
     geocoded = geocoder.google(address)
     geojson = geocoded.geojson
     with open('static/venue.json', 'r') as outfile:
-        content = json.loads(outfile.read())
-        content['features'].append(geojson)
+        content = outfile.read()
+        if content:
+            content = json.loads(content)
+            content['features'].append(geojson)
 
     with open('static/venue.json', 'w') as outfile:
+        if not content:
+            content =  {'type': 'FeatureCollection', 'features': [geojson]}
         json.dump(content, outfile)
 
 if __name__ == "__main__":
