@@ -243,13 +243,9 @@ def pull_tweets(target_twitter_handle, connection):
 
 @view_config(route_name='home', renderer='templates/base.jinja2')
 def geo_json(request):
-    """return a list of all entries as dicts"""
-    cursor = request.db.cursor()
-    cursor.execute(READ_TWEET, (1,))  # TODO: retrieving table id for a venue
+    """renders home page"""
 
-    keys = ('id', 'parent_id', 'author_handle', 'content', 'time')
-    entries = [dict(zip(keys, row)) for row in cursor.fetchall()]
-    return {'entries': entries}
+    return {}
 
 
 @view_config(route_name='writelocation', request_method='POST', renderer='json')
@@ -263,16 +259,15 @@ def write_input_location(request):
 
     # Write/pull tweets regardless of correctness of twitter handle/address for now
     # TODO: have user verification
-    write_local((request.params.get('venue'),
-                handle_guess,
-                request.params.get('address')),
-                request.db)
-    add_venue(request.params.get('address'))
-    pull_tweets(handle_guess, request.db)
-
-    # Pull tweets for a guessed handle associated with a location name
-    # pull_tweets(handle_guess, request.db)
-    # Place pin on map?
+    cursor = request.db.cursor()
+    cursor.execute(GET_VENUE_INFO, (request.params.get('address', None), ))
+    if not cursor.fetchone():
+        write_local((request.params.get('venue'),
+                    handle_guess,
+                    request.params.get('address')),
+                    request.db)
+        add_venue(request.params.get('address'))
+        pull_tweets(handle_guess, request.db)
 
     return {'venue_guess': request.params.get('venue'),
             'handle_guess': handle_guess,

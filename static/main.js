@@ -198,7 +198,7 @@ function display_tweets(address) {
 
             $('#sidebar').append(html);
           }
-        else {
+        } else {
           $('#sidebar').append('<p class="errorMessage">Sorry, no tweets were found...</p>');
         }
       },
