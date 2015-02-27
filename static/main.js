@@ -72,6 +72,8 @@ function initialize() {
 
   var markers = [];
 
+  //flag for currently displayed twitter feed
+  var current = false;
 
   // Create the search box and link it to the UI element.
   var input = /** @type {HTMLInputElement} */(
@@ -105,14 +107,25 @@ function initialize() {
       position: places[0].geometry.location,
       address: places[0].formatted_address.slice(0, -15)
     });
+
     google.maps.event.addListener(marker, 'click', function() {
-      display_tweets(marker.address);
+        if (current["displayed"] !== undefined && marker != current){
+            current["displayed"] = undefined;
+        };
+        current = marker;
+
+    
+        if (marker["displayed"] == undefined){
+            marker["displayed"] = display_tweets(marker.address);
+        }
+        else{
+            $('#sidebar').removeClass("sidebar--active");
+            marker["displayed"] = undefined;
+        }
     });
 
-    // bounds.extend(place.geometry.location);
     map.panTo(places[0].geometry.location);
 
-  // map.fitBounds(bounds);
   });
 
   // if (places.length == 0) {
@@ -156,12 +169,23 @@ function initialize() {
   searchBox.setBounds(bounds);
   });
 
-
   map.data.addListener('click', function(event) {
     var address = event.feature["k"]["address"].slice(0, -5);
-      display_tweets(address)
-  });
-}
+    
+    if (current["displayed"] !== undefined && event.feature != current){
+        current["displayed"] = undefined;
+    };
+    current = event.feature;
+
+    
+    if (event.feature["displayed"] == undefined){
+        event.feature["displayed"] = display_tweets(address);
+    }
+    else{
+        $('#sidebar').removeClass("sidebar--active");
+        event.feature["displayed"] = undefined;
+  }
+});
 
 function display_tweets(address) {
   $.ajax({
@@ -203,8 +227,9 @@ function display_tweets(address) {
         }
       },
   });
-
   $('#sidebar').addClass("sidebar--active");
+  return true;
+  };
 };
 // Load geojson data
 google.maps.event.addDomListener(window, 'load', initialize);
