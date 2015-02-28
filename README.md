@@ -1,5 +1,5 @@
 # Wazzap
-Group Project - for Python developer project code fellows
+Group Project - for Python developer project Code Fellows
 
 
 Wazzap is built to help poeple find events to got to on a night out. It works by allowing a users to enter venues in the search box and when their venue is found, it will put a marker on the map for that venue. When they click that marker, they can now see the latest tweets from that venue. There is some amount of filtering for tweets that look life events. 
