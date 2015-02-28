@@ -31,14 +31,14 @@ Log onto our instance
 
 
 ### Instructions for deploying new dbase schema:
-Log into our dbase:
+1. Log into our dbase:
 
 ```Shell
 ubuntu@ip-172-31-21-125:~$ psql --host=wazzapdbinstance.cskx7uviv9zs.us-west-2.rds.amazonaws.com --port=5432 --username=wazzapuser --dbname=wazzapdbase
 Password for user wazzapuser:wazzappaskey
 ```
 
-    2. Remove the dbase tables:
+2. Remove the dbase tables:
 
 
 ```Shell
@@ -47,7 +47,7 @@ wazzapdbase-> DROP TABLE locals
 wazzapdbase-> \q
 ```
 
-    3. Go into python in the wazzap directory:
+3. Go into python in the wazzap directory:
 
 
 ```Shell
@@ -55,7 +55,7 @@ ubuntu@ip-172-31-21-125:~$ cd wazzap
 ubuntu@ip-172-31-21-125:~/wazzap$ python
 ```
 
-    4. Initialize and the database and populate the locations database:
+4. Initialize and the database and populate the locations database:
 
 
 ```Shell
@@ -73,21 +73,21 @@ ubuntu@ip-172-31-21-125:~/wazzap$ supervisorctl restart webapp
 ```
 
 ### Restart Supervisor (Manual Way):
-show processes:
+1. show processes:
 
 
 ```Shell
 ubuntu@ip-172-31-21-125:~/wazzap$ ps -e
 ```
 
-      2. kill process:
+2. kill process:
 
 
 ```Shell
 ubuntu@ip-172-31-21-125:~/wazzap$ sudo kill <id of supervisord>
 ```
 
-      3. start supervisor
+3. start supervisor
 
 
 ```Shell
